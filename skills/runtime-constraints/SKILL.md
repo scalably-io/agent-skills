@@ -9,7 +9,8 @@ metadata:
     commit: ef174fc3
     date: "2026-09-07"
   triggers: [what tools do I have, can I install, runtime, agent environment, what's available, package install, pip install, npm install, runtime limits]
-  not_for: [Actually performing tasks — this is a reference skill only, consult it when uncertain what the runtime provides]
+  not_for:
+    - "Actually performing tasks: this is a reference skill only, consult it when uncertain what the runtime provides"
 ---
 
 # Runtime Constraints

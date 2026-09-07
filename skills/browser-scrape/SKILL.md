@@ -9,7 +9,8 @@ metadata:
     commit: ef174fc3
     date: "2026-09-07"
   triggers: [scrape, scraping, extract page content, read this site, homepage harvest, contact harvest, JS-rendered page, page blocks fetch, Scrapling]
-  not_for: [Login, forms, clicks, visual UI work, downloads, or any authenticated/interactive browser task — use an interactive browser-automation skill instead]
+  not_for:
+    - "Login, forms, clicks, visual UI work, downloads, or any authenticated/interactive browser task: use an interactive browser-automation skill instead"
 ---
 
 # Browser Scrape
