@@ -69,7 +69,10 @@ Replace the placeholder content. Sections are modular — add, remove, reorder, 
 | Hero | `.hero` | Title, subtitle, intro |
 | Executive summary | `.callout` | The one headline finding |
 | Key metrics | `.kpi-grid` | 3-5 KPI cards with labels |
+| Pillars | `.feature-grid` / `.feature-card` | 3-4 key areas or framework pillars, each with a heading + description |
 | Data table | `table.table-stack` in `.table-wrap` | Tabular data — see Tables below |
+| Analysis | `.grid-2` | Two-column deep dive — narrative on one side, a pull-quote `.callout` on the other |
+| Alerts | `.callout-success` / `.callout-warning` / `.callout-critical` | Status callouts for a positive result, something to watch, or an urgent issue |
 | Recommendations | `<ol>` list with cards | Numbered action items |
 | Closing | CTA button | Call to action or sign-off |
 | Footer | `<footer>` | Name + report title + date |
