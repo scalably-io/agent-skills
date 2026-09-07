@@ -1,0 +1,31 @@
+{
+  "name": "scalably-agent-skills",
+  "owner": { "name": "Scalably", "url": "https://scalably.io" },
+  "metadata": { "description": "Production-derived Agent Skills from Scalably: agent operations and SEO operations.", "version": "1.0.0" },
+  "plugins": [
+    {
+      "name": "agent-ops",
+      "description": "Research, reports, automation, prompt rewriting, file-based memory with nightly maintenance, publishing, and runtime checks.",
+      "version": "1.0.0",
+      "source": "./",
+      "skills": [
+        "./skills/research", "./skills/report", "./skills/automation", "./skills/prompt",
+        "./skills/memory", "./skills/memory-system", "./skills/runtime-constraints",
+        "./skills/browser-scrape", "./skills/publish-html", "./skills/daily-log",
+        "./skills/dream", "./skills/weekly-memory-cleanup", "./skills/friday-feedback",
+        "./skills/workspace-reorg"
+      ]
+    },
+    {
+      "name": "seo-ops",
+      "description": "Link building and content operations: anchor and webmaster policy checks, domain classification, link insertion finder, contact discovery, lead pipeline, internal linking, guest posts.",
+      "version": "1.0.0",
+      "source": "./",
+      "skills": [
+        "./skills/anchor-policy", "./skills/webmaster-policy", "./skills/classify",
+        "./skills/link-insertion-finder", "./skills/batch-contact-email", "./skills/lead-pipeline",
+        "./skills/internal-linking", "./skills/guest-post-writer"
+      ]
+    }
+  ]
+}
