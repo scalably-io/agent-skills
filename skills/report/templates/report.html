@@ -1,0 +1,1059 @@
+<!--
+  TEMPLATE_PLACEHOLDER:document-marker
+  Delete THIS comment block after you finish filling the template.
+  qa_html.py hard-fails any HTML that still contains it, so the gate
+  catches "agent shipped the raw template" before delivery.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Report Title</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        /* Palette — dark mode */
+        --bg: #0c0c0c;
+        --bg-elevated: #151419;
+        --bg-card: #151419;
+        --surface: #1a1a24;
+        --surface-hover: #222233;
+
+        --text: #fff;
+        --text-95: rgba(255, 255, 255, 0.95);
+        --text-60: rgba(255, 255, 255, 0.6);
+        --text-50: rgba(255, 255, 255, 0.5);
+        --text-30: rgba(255, 255, 255, 0.3);
+
+        --border: rgba(255, 255, 255, 0.1);
+        --border-15: rgba(255, 255, 255, 0.15);
+        --border-20: rgba(255, 255, 255, 0.2);
+
+        --brand: #998aff;
+        --brand-600: #7468cb;
+        --brand-700: #2a2b54;
+
+        --positive: #34a853;
+        --negative: #e84040;
+        --warning: #f5a623;
+
+        /* Typography */
+        --font: "DM Sans", "Avenir Next", "Segoe UI", sans-serif;
+
+        /* Spacing */
+        --space-sm: 8px;
+        --space-md: 16px;
+        --space-lg: 24px;
+        --space-xl: 32px;
+        --space-2xl: 48px;
+        --space-3xl: 64px;
+        --space-4xl: 96px;
+
+        /* Radius */
+        --radius-sm: 12px;
+        --radius-md: 16px;
+        --radius-lg: 24px;
+        --radius-xl: 40px;
+
+        /* Motion */
+        --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: var(--font);
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      a {
+        color: var(--brand);
+        text-decoration: none;
+      }
+
+      /* ── Container ── */
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 var(--space-xl);
+      }
+      @media (max-width: 640px) {
+        .container {
+          padding: 0 var(--space-md);
+        }
+      }
+
+      /* ── Header ── */
+      .report-header {
+        padding: var(--space-lg) 0;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .report-header .logo {
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--text-95);
+        letter-spacing: -0.02em;
+      }
+      .report-header .meta {
+        font-size: 14px;
+        color: var(--text-50);
+      }
+
+      /* ── Typography ── */
+      h1 {
+        font-weight: 400;
+        font-size: clamp(38px, 5vw, 62px);
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        color: var(--text-95);
+      }
+      h2 {
+        font-weight: 400;
+        font-size: clamp(28px, 4vw, 52px);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        color: var(--text-95);
+      }
+      h3 {
+        font-weight: 400;
+        font-size: clamp(22px, 2.5vw, 32px);
+        letter-spacing: -0.02em;
+        line-height: 1;
+        color: var(--text-95);
+        margin-top: var(--space-xl);
+        margin-bottom: var(--space-md);
+      }
+      h4 {
+        font-weight: 500;
+        font-size: 20px;
+        color: var(--text-95);
+      }
+      p {
+        color: var(--text-60);
+        font-size: 15px;
+        margin-bottom: var(--space-md);
+      }
+      p:last-child {
+        margin-bottom: 0;
+      }
+      strong {
+        color: var(--text-95);
+        font-weight: 600;
+      }
+      .section-label {
+        font-size: 16px;
+        color: var(--text-50);
+        letter-spacing: -0.02em;
+        display: block;
+        margin-bottom: var(--space-md);
+      }
+      .brand-text {
+        color: var(--brand);
+      }
+
+      /* ── Sections ── */
+      section {
+        padding: var(--space-4xl) 0;
+        border-bottom: 1px solid var(--border);
+      }
+      section:last-of-type {
+        border-bottom: none;
+      }
+      .section-header {
+        padding-bottom: var(--space-2xl);
+      }
+      .section-header .section-label {
+        margin-bottom: var(--space-md);
+      }
+
+      /* ── Hero (standalone variant) ── */
+      .hero {
+        padding: 80px 0 60px;
+      }
+      .hero-subtitle {
+        font-size: 18px;
+        color: var(--text-50);
+        font-weight: 400;
+      }
+
+      /* ── KPI / Stat Cards ── */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--space-lg);
+      }
+      .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+      }
+      .stat-card .label {
+        font-size: 14px;
+        color: var(--text-50);
+      }
+      .stat-value {
+        font-weight: 400;
+        font-size: clamp(32px, 4vw, 48px);
+        letter-spacing: -0.03em;
+        display: block;
+        margin: var(--space-sm) 0;
+      }
+      .stat-change {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .stat-change.positive {
+        color: var(--positive);
+      }
+      .stat-change.negative {
+        color: var(--negative);
+      }
+      .stat-change.neutral {
+        color: var(--text-50);
+      }
+
+      /* ── Data Tables ── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-50);
+        text-align: left;
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--border-15);
+        white-space: nowrap;
+      }
+      td {
+        font-size: 15px;
+        color: var(--text-60);
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--border);
+      }
+      td.number {
+        text-align: right;
+        font-weight: 500;
+        color: var(--text-95);
+      }
+      th.number {
+        text-align: right;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        color: var(--text-95);
+        background: var(--surface);
+      }
+      .table-wrap {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+      .table-wrap table {
+        margin: 0;
+      }
+      .table-wrap th:first-child,
+      .table-wrap td:first-child {
+        padding-left: var(--space-xl);
+      }
+      .table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* ── Dense numeric table — stacks as label/value pairs on phones ──
+         Use class="table-stack" on <table> when columns are dense / numeric.
+         Each <td> MUST have data-label="Column Name". On desktop and in PDF
+         this renders as a normal table; on mobile each row stacks. Same
+         markup, two correct layouts. */
+      @media (max-width: 640px) {
+        .table-stack thead {
+          display: none;
+        }
+        .table-stack,
+        .table-stack tbody,
+        .table-stack tr,
+        .table-stack td {
+          display: block;
+          width: 100%;
+        }
+        .table-stack tr {
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: var(--space-md) var(--space-lg);
+          margin-bottom: var(--space-sm);
+        }
+        .table-stack td {
+          padding: 6px 0;
+          border: none;
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          gap: var(--space-md);
+        }
+        .table-stack td::before {
+          content: attr(data-label);
+          flex-shrink: 0;
+          color: var(--text-50);
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .table-stack td:first-child {
+          color: var(--text-95);
+          font-weight: 600;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 8px;
+          padding-bottom: 8px;
+        }
+        .table-stack td:first-child::before {
+          display: none;
+        }
+        .table-wrap:has(.table-stack) {
+          background: transparent;
+          border: none;
+        }
+        .table-wrap .table-scroll:has(.table-stack) {
+          overflow: visible;
+        }
+      }
+      @media print {
+        .table-stack thead {
+          display: table-header-group;
+        }
+        .table-stack,
+        .table-stack tbody {
+          display: table;
+          width: 100%;
+        }
+        .table-stack tbody {
+          display: table-row-group;
+        }
+        .table-stack tr {
+          display: table-row;
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          padding: 0;
+          margin: 0;
+        }
+        .table-stack td {
+          display: table-cell;
+          padding: var(--space-md);
+          border-bottom: 1px solid var(--border);
+        }
+        .table-stack td::before {
+          display: none;
+        }
+        .table-stack td:first-child {
+          border-bottom: 1px solid var(--border);
+          margin: 0;
+          padding-bottom: var(--space-md);
+        }
+      }
+
+      /* ── Cards ── */
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+      }
+      .card h4 {
+        margin-bottom: var(--space-sm);
+      }
+      .card p {
+        color: var(--text-50);
+        font-size: 14px;
+        margin-bottom: 0;
+      }
+
+      /* ── Feature Grid ── */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: var(--space-md);
+        margin: var(--space-lg) 0;
+      }
+      .feature-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 28px var(--space-xl);
+        transition: border-color 0.2s var(--ease-standard);
+      }
+      .feature-card:hover {
+        border-color: var(--border-15);
+      }
+      .feature-card h4 {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-95);
+        margin-bottom: var(--space-sm);
+        letter-spacing: -0.01em;
+      }
+      .feature-card p {
+        font-size: 14px;
+        color: var(--text-50);
+        margin-bottom: 0;
+      }
+
+      /* ── Market Cards ── */
+      .market-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: var(--space-lg);
+      }
+      .market-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+      }
+      .market-card .market-title {
+        font-weight: 500;
+        font-size: 18px;
+        color: var(--text-95);
+        margin-bottom: var(--space-sm);
+      }
+      .market-card .market-traffic {
+        font-weight: 400;
+        font-size: 36px;
+        letter-spacing: -0.03em;
+        color: var(--text);
+        margin: var(--space-sm) 0;
+      }
+      .market-card .market-meta {
+        font-size: 13px;
+        color: var(--text-50);
+      }
+
+      /* ── Callout (brand) ── */
+      .callout {
+        padding: var(--space-xl);
+        background: var(--surface);
+        border: 1px solid var(--border-15);
+        border-radius: var(--radius-lg);
+        position: relative;
+        margin: var(--space-lg) 0;
+        overflow: hidden;
+      }
+      .callout::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--brand), var(--brand-600));
+      }
+      .callout h4 {
+        color: var(--text-95);
+        margin-bottom: var(--space-md);
+      }
+      .callout p {
+        margin-bottom: var(--space-sm);
+      }
+      .callout p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ── Callout variants ── */
+      .callout-warning {
+        padding: var(--space-xl);
+        background: rgba(245, 166, 35, 0.06);
+        border: 1px solid rgba(245, 166, 35, 0.25);
+        border-radius: var(--radius-lg);
+        position: relative;
+        margin: var(--space-lg) 0;
+        overflow: hidden;
+      }
+      .callout-warning::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--warning), #c07800);
+      }
+      .callout-warning h4 {
+        color: var(--warning);
+        margin-bottom: var(--space-md);
+      }
+      .callout-warning p {
+        margin-bottom: var(--space-sm);
+      }
+      .callout-warning p:last-child {
+        margin-bottom: 0;
+      }
+
+      .callout-critical {
+        padding: var(--space-xl);
+        background: rgba(232, 64, 64, 0.06);
+        border: 1px solid rgba(232, 64, 64, 0.3);
+        border-radius: var(--radius-lg);
+        position: relative;
+        margin: var(--space-lg) 0;
+        overflow: hidden;
+      }
+      .callout-critical::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--negative), #9b0000);
+      }
+      .callout-critical h4 {
+        color: var(--negative);
+        margin-bottom: var(--space-md);
+      }
+      .callout-critical p {
+        margin-bottom: var(--space-sm);
+      }
+      .callout-critical p:last-child {
+        margin-bottom: 0;
+      }
+
+      .callout-success {
+        padding: var(--space-xl);
+        background: rgba(52, 168, 83, 0.06);
+        border: 1px solid rgba(52, 168, 83, 0.25);
+        border-radius: var(--radius-lg);
+        position: relative;
+        margin: var(--space-lg) 0;
+        overflow: hidden;
+      }
+      .callout-success::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--positive), #1d7a3a);
+      }
+      .callout-success h4 {
+        color: var(--positive);
+        margin-bottom: var(--space-md);
+      }
+      .callout-success p {
+        margin-bottom: var(--space-sm);
+      }
+      .callout-success p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ── Status Badges ── */
+      .badge {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.02em;
+      }
+      .badge-excellent {
+        background: rgba(52, 168, 83, 0.15);
+        color: var(--positive);
+      }
+      .badge-good {
+        background: rgba(153, 138, 255, 0.15);
+        color: var(--brand);
+      }
+      .badge-warning {
+        background: rgba(245, 166, 35, 0.15);
+        color: var(--warning);
+      }
+      .badge-poor {
+        background: rgba(232, 64, 64, 0.15);
+        color: var(--negative);
+      }
+
+      /* ── Rank Chips ── */
+      .rank-chip {
+        display: inline-block;
+        background: var(--brand-700);
+        color: var(--brand);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 2px 10px;
+        border-radius: 20px;
+      }
+      .rank-chip.gold {
+        background: rgba(255, 215, 0, 0.12);
+        color: #ffd700;
+      }
+
+      /* ── Lists ── */
+      ul {
+        margin: var(--space-md) 0;
+        padding-left: 0;
+        list-style: none;
+      }
+      li {
+        font-size: 15px;
+        color: var(--text-60);
+        padding: var(--space-sm) 0 var(--space-sm) 20px;
+        position: relative;
+        border-bottom: 1px solid var(--border);
+      }
+      li:last-child {
+        border-bottom: none;
+      }
+      li::before {
+        content: "\2014";
+        color: var(--brand);
+        position: absolute;
+        left: 0;
+        font-weight: 400;
+      }
+
+      /* ── Recommendation List (numbered, inline) ── */
+      .rec-list {
+        list-style: none;
+        counter-reset: rec;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+        padding-left: 0;
+        margin: var(--space-md) 0;
+      }
+      .rec-list li {
+        counter-increment: rec;
+        display: block;
+        padding: var(--space-lg);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        position: relative;
+        font-size: 15px;
+        color: var(--text-60);
+      }
+      .rec-list li::before {
+        content: counter(rec) ". ";
+        position: static;
+        display: inline;
+        background: none;
+        color: var(--brand);
+        font-weight: 600;
+        font-size: 15px;
+        margin-right: 4px;
+        width: auto;
+        height: auto;
+        border-radius: 0;
+      }
+      .rec-list li > div {
+        display: inline;
+      }
+      .rec-list li p {
+        color: var(--text-60);
+        margin: 0;
+        display: inline;
+      }
+      .rec-list li strong {
+        color: var(--text-95);
+      }
+
+      /* ── Sub-heading (within section) ── */
+      .sub-heading {
+        font-weight: 500;
+        font-size: 18px;
+        color: var(--text-95);
+        margin-top: var(--space-3xl);
+        margin-bottom: var(--space-lg);
+        padding-bottom: var(--space-sm);
+        border-bottom: 1px solid var(--border);
+      }
+      .sub-heading:first-of-type {
+        margin-top: 0;
+      }
+
+      /* ── Grid Layouts ── */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-lg);
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-lg);
+      }
+
+      /* ── CTA Button ── */
+      .cta-button {
+        display: inline-block;
+        background: var(--brand);
+        color: #0c0c0c;
+        padding: 14px 32px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 15px;
+        margin-top: var(--space-lg);
+        text-decoration: none;
+        transition: opacity 0.2s var(--ease-standard);
+        letter-spacing: -0.01em;
+      }
+      .cta-button:hover {
+        opacity: 0.85;
+      }
+
+      /* ── Footer ── */
+      footer {
+        padding: var(--space-xl) 0;
+        border-top: 1px solid var(--border);
+        margin-top: var(--space-4xl);
+      }
+      footer p {
+        font-size: 14px;
+        color: var(--text-30);
+        text-align: center;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 900px) {
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 640px) {
+        section {
+          padding: var(--space-3xl) 0;
+        }
+        .kpi-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .hero {
+          padding: 48px 0 40px;
+        }
+      }
+
+      /* ── Print ── */
+      @media print {
+        body {
+          background: #1a1a24;
+        }
+        .stat-card,
+        .card,
+        .feature-card {
+          break-inside: avoid;
+        }
+        section {
+          break-inside: avoid-page;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="report-header">
+        <span class="logo">Company Name</span>
+        <span class="meta">Report Type · April 2026</span>
+      </header>
+
+      <!-- ==================== HERO ==================== -->
+      <div class="hero">
+        <span class="section-label">/ Category /</span>
+        <h1>Report <span class="brand-text">Title</span></h1>
+        <p class="hero-subtitle">
+          One-line summary of what this report covers.
+        </p>
+      </div>
+
+      <!-- ==================== EXECUTIVE SUMMARY ==================== -->
+      <section>
+        <div class="section-header">
+          <span class="section-label">/ Executive Summary /</span>
+          <h2>The big picture</h2>
+        </div>
+        <div class="callout">
+          <h4>Key headline finding or insight</h4>
+          <p>
+            One or two paragraphs of executive summary that gives the reader the
+            most important takeaway from the entire report. Use
+            <strong>bold</strong> for emphasis and
+            <span class="brand-text" style="font-weight: 600">brand-text</span>
+            for key numbers.
+          </p>
+        </div>
+      </section>
+
+      <!-- ==================== KEY METRICS ==================== -->
+      <section>
+        <div class="section-header">
+          <span class="section-label">/ Key Metrics /</span>
+          <h2>Performance at a glance</h2>
+        </div>
+        <div class="kpi-grid">
+          <div class="stat-card">
+            <span class="label">Primary Metric</span>
+            <span class="stat-value brand-text">1.29M</span>
+            <span class="stat-change positive">+12.4%</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">Secondary Metric</span>
+            <span class="stat-value">5,111</span>
+            <span class="stat-change positive">Strong</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">Tertiary Metric</span>
+            <span class="stat-value">3,131</span>
+            <span class="stat-change neutral">Stable</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">Fourth Metric</span>
+            <span class="stat-value">#3</span>
+            <span class="stat-change negative">-2 positions</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== FEATURE / CARD GRID ==================== -->
+      <section>
+        <div class="section-header">
+          <span class="section-label">/ Pillars /</span>
+          <h2>Three or four key areas</h2>
+        </div>
+        <p>Brief introduction to the pillars, framework, or focus areas.</p>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h4>First Pillar</h4>
+            <p>Description of the first concept or area of focus.</p>
+          </div>
+          <div class="feature-card">
+            <h4>Second Pillar</h4>
+            <p>Description of the second concept or area of focus.</p>
+          </div>
+          <div class="feature-card">
+            <h4>Third Pillar</h4>
+            <p>Description of the third concept or area of focus.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== DATA TABLE ==================== -->
+      <section>
+        <div class="section-header">
+          <span class="section-label">/ Data /</span>
+          <h2>Detailed breakdown</h2>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="table-stack">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Metric A</th>
+                  <th class="number">Metric B</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="Item">
+                    <strong style="color: var(--text-95)">Row item one</strong>
+                  </td>
+                  <td
+                    data-label="Metric A"
+                    style="color: var(--text-50); font-size: 13px"
+                  >
+                    Description
+                  </td>
+                  <td class="number" data-label="Metric B">1,234</td>
+                  <td data-label="Status">
+                    <span class="badge badge-excellent">Excellent</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td data-label="Item">
+                    <strong style="color: var(--text-95)">Row item two</strong>
+                  </td>
+                  <td
+                    data-label="Metric A"
+                    style="color: var(--text-50); font-size: 13px"
+                  >
+                    Description
+                  </td>
+                  <td class="number" data-label="Metric B">5,678</td>
+                  <td data-label="Status">
+                    <span class="badge badge-good">Good</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td data-label="Item">
+                    <strong style="color: var(--text-95)"
+                      >Row item three</strong
+                    >
+                  </td>
+                  <td
+                    data-label="Metric A"
+                    style="color: var(--text-50); font-size: 13px"
+                  >
+                    Description
+                  </td>
+                  <td class="number" data-label="Metric B">910</td>
+                  <td data-label="Status">
+                    <span class="badge badge-warning">Review</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td data-label="Item">
+                    <strong style="color: var(--text-95)">Row item four</strong>
+                  </td>
+                  <td
+                    data-label="Metric A"
+                    style="color: var(--text-50); font-size: 13px"
+                  >
+                    Description
+                  </td>
+                  <td class="number" data-label="Metric B">171</td>
+                  <td data-label="Status">
+                    <span class="badge badge-poor">Poor</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== ANALYSIS (two-column) ==================== -->
+      <section>
+        <div class="section-header">
+          <span class="section-label">/ Analysis /</span>
+          <h2>Deep dive section</h2>
+        </div>
+        <div class="grid-2">
+          <div>
+            <p>
+              Left column analysis, narrative, or explanation. This is where the
+              main insight lives. Write 2-4 paragraphs.
+            </p>
+            <ul>
+              <li><strong>First key finding</strong> with supporting detail</li>
+              <li>
+                <strong>Second key finding</strong> with supporting detail
+              </li>
+              <li><strong>Third key finding</strong> with supporting detail</li>
+            </ul>
+          </div>
+          <div>
+            <div class="callout">
+              <h4>Key insight</h4>
+              <p>
+                A pull quote or key insight that deserves emphasis and stands
+                out from the body text.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== CALLOUT VARIANTS ==================== -->
+      <section>
+        <div class="section-header">
+          <span class="section-label">/ Alerts /</span>
+          <h2>Status callouts</h2>
+        </div>
+
+        <div class="callout-success">
+          <h4>Success headline</h4>
+          <p>Positive finding or result that should be highlighted.</p>
+        </div>
+
+        <div class="callout-warning">
+          <h4>Warning headline</h4>
+          <p>Something that needs attention but is not critical.</p>
+        </div>
+
+        <div class="callout-critical">
+          <h4>Critical headline</h4>
+          <p>Urgent issue requiring immediate action.</p>
+        </div>
+      </section>
+
+      <!-- ==================== RECOMMENDATIONS ==================== -->
+      <section>
+        <div class="section-header">
+          <span class="section-label">/ Next Steps /</span>
+          <h2>Recommendations</h2>
+        </div>
+        <ol class="rec-list">
+          <li>
+            <div>
+              <p>
+                <strong>First recommendation</strong> — description of the
+                action and expected outcome.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <p>
+                <strong>Second recommendation</strong> — description of the
+                action and expected outcome.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <p>
+                <strong>Third recommendation</strong> — description of the
+                action and expected outcome.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <p>
+                <strong>Fourth recommendation</strong> — description of the
+                action and expected outcome.
+              </p>
+            </div>
+          </li>
+        </ol>
+
+        <div style="margin-top: 32px; text-align: center">
+          <a href="#" class="cta-button">Get Started &rarr;</a>
+        </div>
+      </section>
+
+      <!-- ==================== FOOTER ==================== -->
+      <footer>
+        <p>Company Name &middot; Report Title &middot; April 2026</p>
+      </footer>
+    </div>
+  </body>
+</html>
