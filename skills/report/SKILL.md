@@ -8,8 +8,9 @@ metadata:
     path: container/skills/report/SKILL.md
     commit: ef174fc3
     date: "2026-09-07"
-    template_path: groups/global/templates/html/report.html
-    template_commit: e3500c5
+    template_path: templates/html/report.html
+    template_commit: 7b68ba3
+    template_note: "structure derived from production; palette and typography are Scalably's own"
   triggers: [report, analysis, summary, overview, dashboard, breakdown, data presentation, deep dive]
   not_for: [Web research — use a research skill instead., File formats such as .xlsx/.pdf/.pptx — use a dedicated skill for those., Charts or diagrams only, with no report around them.]
 ---
@@ -131,7 +132,7 @@ For a trend or comparison chart, load Chart.js before `</body>`:
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 ```
 
-Match the chart's colors and fonts to the CSS variables already defined in the template's `:root` block (`--text`, `--text-60`, `--border`, `--brand`, `--font`) so it doesn't clash with the rest of the report. Prefer stat cards and tables over charts when the data is simple — a chart earns its place only for a trend over time, a category comparison, or a part-of-whole breakdown.
+Match the chart's colors and fonts to the CSS variables already defined in the template's `:root` block (`--text`, `--text-60`, `--border`, `--brand`, `--fb`) so it doesn't clash with the rest of the report. Prefer stat cards and tables over charts when the data is simple — a chart earns its place only for a trend over time, a category comparison, or a part-of-whole breakdown.
 
 ### Data presentation
 
@@ -139,8 +140,13 @@ Match the chart's colors and fonts to the CSS variables already defined in the t
 - Changes: use `.stat-change.positive` (green) or `.stat-change.negative` (red).
 - Always show the date range in the header and footer.
 
+### Brand rules
+
+The template ships with Scalably's own design tokens, not a client's: `--bg #faf9f7` (warm off-white canvas), `--text #0a0a09` (near-black), `--green #01e9ac` (the one accent, reserved for the `.cta-button` — never decorative, never a second use per view), `--green-deep #00c896` (green text/links/badges on the light background), `--text-muted #5a5a55` (secondary text, feeds `--text-60`). Typography: `--fd` Instrument Serif for h1-h3, `--fb` Figtree for body text, `--fm` JetBrains Mono for labels (`.section-label`, `.meta`, `.badge`, `.rank-chip`). Every other CSS variable (`--brand`, `--text-95/60/50/30`, `--border*`, `--surface*`) is derived from these five — see the comment above `:root` in the template for the derivation.
+
 ### Do not
 
-- Change the CSS custom properties (`--bg`, `--brand`, `--text`, etc.) — they hold the template's design system together.
+- Change the CSS custom properties (`--bg`, `--green`, `--green-deep`, `--text`, `--text-muted`, etc.) — they hold the template's design system together.
+- Introduce a second raw `--green` usage — it belongs to the CTA button only; use `--brand`/`--green-deep` for any other accent.
 - Remove the Google Fonts link or change `font-family`.
 - Add drop shadows, gradients beyond what's already in the template, or a second accent color.

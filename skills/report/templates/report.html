@@ -13,38 +13,82 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        /* Palette — dark mode */
-        --bg: #0c0c0c;
-        --bg-elevated: #151419;
-        --bg-card: #151419;
-        --surface: #1a1a24;
-        --surface-hover: #222233;
+        /*
+          Palette — Scalably brand tokens (content/BRAND.md).
+          Light theme. The five source tokens are --bg, --text, --green,
+          --green-deep and --text-muted; everything else below is derived
+          from them so the rest of the stylesheet (which only ever
+          references --brand/--text-NN/--border etc.) does not need to
+          change usage sites, only these definitions:
 
-        --text: #fff;
-        --text-95: rgba(255, 255, 255, 0.95);
-        --text-60: rgba(255, 255, 255, 0.6);
-        --text-50: rgba(255, 255, 255, 0.5);
-        --text-30: rgba(255, 255, 255, 0.3);
+          - --bg-card / --bg-elevated: white, one step lighter than the
+            warm off-white canvas, so cards read as "raised" against --bg.
+          - --surface / --surface-hover: a warm neutral one and two steps
+            DARKER than --bg (the opposite direction from cards), used for
+            secondary fills (feature cards, callouts, rec-list items) that
+            need to sit visually behind a card but still separate from the
+            page background.
+          - --text-95/60/50/30: opacity steps of --text for the heading /
+            body / secondary / faint tiers the template already expects.
+            The 60 tier is pinned to the literal --text-muted value from
+            BRAND.md rather than a computed alpha, since that is the
+            brand's own designated secondary-text color.
+          - --border/-15/-20: low-alpha steps of --text, standing in for
+            the dark-mode rgba(255,255,255,N) borders.
+          - --brand/--brand-600: BOTH map to --green-deep, not the raw
+            accent. --green-deep is "green text on light" per BRAND.md,
+            and --brand is used here for recurring, multi-instance accents
+            (links, .brand-text spans, badges, table highlights) — using
+            the vivid --green there would violate "one focal use per
+            view, never decorative". The raw --green is reserved
+            exclusively for .cta-button, the single focal action per
+            report.
+          - --brand-700: a pale green-tinted wash (was a dark navy-purple
+            card fill) for the .rank-chip background.
+          - --positive: reuses --green-deep so "positive" status doesn't
+            introduce a second, off-brand green.
+          - --negative/--warning: kept close to source, values are already
+            legible on a light ground; only the gold rank-chip text
+            (#ffd700) and the cta-button/print hardcoded literals below
+            are adjusted for light-background contrast.
+        */
+        --bg: #faf9f7;
+        --bg-elevated: #ffffff;
+        --bg-card: #ffffff;
+        --surface: #f3f1ec;
+        --surface-hover: #ece9e2;
 
-        --border: rgba(255, 255, 255, 0.1);
-        --border-15: rgba(255, 255, 255, 0.15);
-        --border-20: rgba(255, 255, 255, 0.2);
+        --text: #0a0a09;
+        --text-muted: #5a5a55;
+        --text-95: rgba(10, 10, 9, 0.92);
+        --text-60: var(--text-muted);
+        --text-50: rgba(10, 10, 9, 0.45);
+        --text-30: rgba(10, 10, 9, 0.28);
 
-        --brand: #998aff;
-        --brand-600: #7468cb;
-        --brand-700: #2a2b54;
+        --border: rgba(10, 10, 9, 0.1);
+        --border-15: rgba(10, 10, 9, 0.15);
+        --border-20: rgba(10, 10, 9, 0.2);
 
-        --positive: #34a853;
-        --negative: #e84040;
+        --green: #01e9ac;
+        --green-deep: #00c896;
+        --brand: var(--green-deep);
+        --brand-600: #009c78;
+        --brand-700: rgba(0, 200, 150, 0.12);
+
+        --positive: var(--green-deep);
+        --negative: #c9403f;
         --warning: #f5a623;
 
         /* Typography */
-        --font: "DM Sans", "Avenir Next", "Segoe UI", sans-serif;
+        --fd: "Instrument Serif", Georgia, serif;
+        --fb: "Figtree", "Segoe UI", sans-serif;
+        --fm: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+        --font: var(--fb);
 
         /* Spacing */
         --space-sm: 8px;
@@ -115,12 +159,17 @@
         letter-spacing: -0.02em;
       }
       .report-header .meta {
-        font-size: 14px;
+        font-family: var(--fm);
+        font-size: 13px;
         color: var(--text-50);
       }
 
-      /* ── Typography ── */
+      /* ── Typography ──
+         Display headings (h1-h3) use the Instrument Serif editorial
+         signature; h4 stays in Figtree since it is a compact card/callout
+         title, not a headline. */
       h1 {
+        font-family: var(--fd);
         font-weight: 400;
         font-size: clamp(38px, 5vw, 62px);
         letter-spacing: -0.02em;
@@ -128,6 +177,7 @@
         color: var(--text-95);
       }
       h2 {
+        font-family: var(--fd);
         font-weight: 400;
         font-size: clamp(28px, 4vw, 52px);
         letter-spacing: -0.02em;
@@ -135,6 +185,7 @@
         color: var(--text-95);
       }
       h3 {
+        font-family: var(--fd);
         font-weight: 400;
         font-size: clamp(22px, 2.5vw, 32px);
         letter-spacing: -0.02em;
@@ -144,7 +195,7 @@
         margin-bottom: var(--space-md);
       }
       h4 {
-        font-weight: 500;
+        font-weight: 600;
         font-size: 20px;
         color: var(--text-95);
       }
@@ -161,9 +212,10 @@
         font-weight: 600;
       }
       .section-label {
-        font-size: 16px;
+        font-family: var(--fm);
+        font-size: 13px;
         color: var(--text-50);
-        letter-spacing: -0.02em;
+        letter-spacing: 0.02em;
         display: block;
         margin-bottom: var(--space-md);
       }
@@ -577,6 +629,7 @@
       /* ── Status Badges ── */
       .badge {
         display: inline-block;
+        font-family: var(--fm);
         font-size: 12px;
         font-weight: 600;
         padding: 3px 10px;
@@ -584,11 +637,11 @@
         letter-spacing: 0.02em;
       }
       .badge-excellent {
-        background: rgba(52, 168, 83, 0.15);
+        background: rgba(0, 200, 150, 0.14);
         color: var(--positive);
       }
       .badge-good {
-        background: rgba(153, 138, 255, 0.15);
+        background: rgba(0, 200, 150, 0.14);
         color: var(--brand);
       }
       .badge-warning {
@@ -596,7 +649,7 @@
         color: var(--warning);
       }
       .badge-poor {
-        background: rgba(232, 64, 64, 0.15);
+        background: rgba(201, 64, 63, 0.14);
         color: var(--negative);
       }
 
@@ -605,14 +658,15 @@
         display: inline-block;
         background: var(--brand-700);
         color: var(--brand);
+        font-family: var(--fm);
         font-size: 13px;
         font-weight: 600;
         padding: 2px 10px;
         border-radius: 20px;
       }
       .rank-chip.gold {
-        background: rgba(255, 215, 0, 0.12);
-        color: #ffd700;
+        background: rgba(184, 134, 11, 0.14);
+        color: #8a6d00;
       }
 
       /* ── Lists ── */
@@ -711,11 +765,13 @@
         gap: var(--space-lg);
       }
 
-      /* ── CTA Button ── */
+      /* ── CTA Button ──
+         The one place in the template that uses the raw --green accent
+         (not --green-deep): the single focal call-to-action per report. */
       .cta-button {
         display: inline-block;
-        background: var(--brand);
-        color: #0c0c0c;
+        background: var(--green);
+        color: var(--text);
         padding: 14px 32px;
         border-radius: 999px;
         font-weight: 600;
@@ -763,7 +819,7 @@
       /* ── Print ── */
       @media print {
         body {
-          background: #1a1a24;
+          background: var(--bg);
         }
         .stat-card,
         .card,
