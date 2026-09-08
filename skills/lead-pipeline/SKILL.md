@@ -1,6 +1,6 @@
 ---
 name: lead-pipeline
-description: "Runs a B2B lead-generation pipeline end to end: discovers candidate companies for a niche and region, scores each against a qualification rubric, finds a contact for the ones that qualify, drafts a personalized outreach email per contact, and writes a ready-to-send CSV. Tracks every company, contact, and campaign membership in a local SQLite store so a later run only processes what changed, and supports resuming a failed run from its last completed stage. Triggers: run lead pipeline, lead pipeline, generate leads, find prospects, build a lead list, lead gen pipeline, prospect pipeline, outreach pipeline, lead pipeline status, lead pipeline resume."
+description: "Runs a B2B lead-generation pipeline end to end: discovers candidate companies for a vertical and region, scores each against a qualification rubric, finds a contact for the ones that qualify, drafts a personalized outreach email per contact, and writes a ready-to-send CSV. Tracks every company, contact, and campaign membership in a local SQLite store so a later run only processes what changed, and supports resuming a failed run from its last completed stage. Triggers: run lead pipeline, lead pipeline, generate leads, find prospects, build a lead list, lead gen pipeline, prospect pipeline, outreach pipeline, lead pipeline status, lead pipeline resume."
 license: MIT
 metadata:
   source: https://scalably.io/skills/lead-pipeline
@@ -12,14 +12,14 @@ metadata:
   not_for:
     - "Running one stage standalone for debugging — this skill is the whole orchestrated pipeline; use the individual Procedure steps directly if you only need one"
     - "You already have a domain list and just need contact emails — use batch-contact-email directly, skip discovery and scoring"
-    - "Filtering an existing domain list by niche without generating a new one — use classify"
+    - "Filtering an existing domain list by vertical without generating a new one — use classify"
 ---
 
 # Lead Pipeline
 
 ## What it does
 
-Orchestrates a full outbound lead-generation run in one session: discover candidate companies matching a niche and region, score each against a qualification rubric, find a contact for the ones that qualify, draft a short personalized outreach email per contact, and write the result to a CSV. State (companies, contacts, scores, campaign memberships, replies) lives in a local SQLite database, so re-running the pipeline only processes what changed, and a failed run can resume from its last completed stage instead of restarting. Supports `run` (full pipeline), `test` (reduced volume, no send-ready output), `status`, and `resume`.
+Orchestrates a full outbound lead-generation run in one session: discover candidate companies matching a vertical and region, score each against a qualification rubric, find a contact for the ones that qualify, draft a short personalized outreach email per contact, and write the result to a CSV. State (companies, contacts, scores, campaign memberships, replies) lives in a local SQLite database, so re-running the pipeline only processes what changed, and a failed run can resume from its last completed stage instead of restarting. Supports `run` (full pipeline), `test` (reduced volume, no send-ready output), `status`, and `resume`.
 
 ## Requirements
 
@@ -33,7 +33,7 @@ Orchestrates a full outbound lead-generation run in one session: discover candid
 
 | | |
 |---|---|
-| Input | A niche, a region, a target prospect count, and a pitch angle (what you're offering and why it matters to that niche) — plus an optional subcommand: `run` (default), `test`, `status [--run-id R]`, or `resume --run-id R` |
+| Input | A vertical, a region, a target prospect count, and a pitch angle (what you're offering and why it matters to that vertical) — plus an optional subcommand: `run` (default), `test`, `status [--run-id R]`, or `resume --run-id R` |
 | Output | `./store/leadgen.db` (SQLite state — every company, contact, score, and campaign membership) and `./output/leads-<YYYYMMDD>.csv` (one row per qualified, enriched, personalized prospect) |
 
 ## Worked example
@@ -41,14 +41,16 @@ Orchestrates a full outbound lead-generation run in one session: discover candid
 Paste into Claude Code with this skill installed:
 
 ```text
-/seo-ops:lead-pipeline niche: boutique fitness studios, region: Berlin, target 50 prospects
+/seo-ops:lead-pipeline vertical: boutique fitness studios, region: Berlin, target 50 prospects
 ```
 
-Expected: `./store/leadgen.db` is created (or updated) with a new `pipeline_runs` row, a run summary lands in chat (discovered / qualified / enriched / personalized counts), and `./output/leads-20260908.csv` has up to 50 rows: `company, website, contact_name, contact_email, score, subject_line, personalized_intro, cta`.
+Expected: `./store/leadgen.db` is created (or updated) with a new `pipeline_runs` row, a run summary lands in chat (discovered / qualified / enriched / personalized counts), and `./output/leads-20260908.csv` has up to 50 rows: `company, website, contact_email, score, subject_line, personalized_intro, cta`.
 
 ## Procedure
 
 <schema>
+This is a documented subset of the production schema; columns whose producers are not part of this skill are omitted.
+
 The pipeline's state lives in `./store/leadgen.db`. Initialize it once per project — this is idempotent, safe to re-run:
 
 ```bash
@@ -59,8 +61,7 @@ CREATE TABLE IF NOT EXISTS companies (
   company_name TEXT,
   canonical_domain TEXT NOT NULL UNIQUE,
   website_url TEXT,
-  linkedin_url TEXT,
-  niche TEXT,
+  vertical TEXT,
   qualification_state TEXT NOT NULL DEFAULT 'pending'
     CHECK (qualification_state IN ('pending','qualified','rejected','needs_review')),
   qualification_score INTEGER,
@@ -102,8 +103,6 @@ CREATE TABLE IF NOT EXISTS qualification_snapshots (
 CREATE TABLE IF NOT EXISTS contacts (
   id INTEGER PRIMARY KEY,
   company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  name TEXT,
-  title TEXT,
   email TEXT,
   email_normalized TEXT,
   email_source TEXT,
@@ -177,15 +176,23 @@ SQL
 ```
 
 State model: `companies` -> `discovery_signals` (why it was found) -> `qualification_snapshots` (score history, append-only) -> `contacts` (enriched) -> `campaign_memberships` (per-campaign outreach state) -> `replies`. State columns to watch: `companies.qualification_state`, `companies.contact_state`, `campaign_memberships.{personalization_state,sync_state,engagement_state}`. Every write goes through `sqlite3`/the pipeline steps below — never hand-edit a row outside a documented step, or later stages will disagree with what actually happened.
+
+Every `Gate:` below that stops the run also closes out `pipeline_runs` rather than leaving it stuck at `status = 'running'` — before telling the user and stopping, run:
+
+```bash
+sqlite3 ./store/leadgen.db "UPDATE pipeline_runs SET status = 'aborted', last_error = '$REASON', finished_at = datetime('now') WHERE id = '$RUN_ID';"
+```
+
+with `$REASON` set to that gate's own stop condition (e.g. `zero candidates discovered`). A run in `aborted` state is what `resume`'s "only resume on an explicit request" language in `<resume_and_status>` below refers to.
 </schema>
 
 ### 1. Setup
 
-Parse the request: niche, region, target prospect count, pitch angle, and subcommand (`run` if none given). Generate a run id: `leadgen_<YYYYMMDD_HHmm>`. `resume` reuses the original run id instead.
+Parse the request: vertical, region, target prospect count, pitch angle, and subcommand (`run` if none given). Generate a run id: `leadgen_<YYYYMMDD_HHmm>`. `resume` reuses the original run id instead.
 
 ```bash
 sqlite3 ./store/leadgen.db "INSERT INTO pipeline_runs (id, trigger_type, status, checkpoint_json)
-  VALUES ('$RUN_ID', 'manual', 'running', json_object('niche', '$NICHE', 'region', '$REGION', 'target', $TARGET, 'pitch_angle', '$PITCH_ANGLE'));"
+  VALUES ('$RUN_ID', 'manual', 'running', json_object('vertical', '$VERTICAL', 'region', '$REGION', 'target', $TARGET, 'pitch_angle', '$PITCH_ANGLE'));"
 ```
 
 ### 2. Preflight
@@ -194,17 +201,17 @@ Before spending any tokens or API credits, confirm the tools you actually need a
 
 ### 3. Discover
 
-Default source — **niche + region search**: run several web searches varying the phrasing (`"<niche>" <region>`, `<niche> near <region>`, local directory/listing sites for that niche) until you have at least `target * 2` distinct candidate domains — the extra headroom absorbs the qualify/enrich drop-off in later stages. For each result, extract `company_name`, `canonical_domain` (strip to registrable domain), and `website_url`.
+Default source — **vertical + region search**: run several web searches varying the phrasing (`"<vertical>" <region>`, `<vertical> near <region>`, local directory/listing sites for that vertical) until you have at least `target * 2` distinct candidate domains — the extra headroom absorbs the qualify/enrich drop-off in later stages. For each result, extract `company_name`, `canonical_domain` (strip to registrable domain), `website_url`, and the search result's own snippet/description text.
 
-Alternate source — **hiring/gig signal search** (use when the niche is defined by a need rather than an industry, e.g. "companies that need overflow bookkeeping help"): search job boards and freelance marketplaces (Upwork, LinkedIn Jobs) for postings that signal the pain point your pitch angle solves. This finds companies with active, timely intent, at the cost of a narrower pool.
+Alternate source — **hiring/gig signal search** (use when the vertical is defined by a need rather than an industry, e.g. "companies that need overflow bookkeeping help"): search job boards and freelance marketplaces (Upwork, LinkedIn Jobs) for postings that signal the pain point your pitch angle solves. This finds companies with active, timely intent, at the cost of a narrower pool.
 
 Insert each candidate, relying on the `UNIQUE(canonical_domain)` constraint to silently skip repeats across runs:
 
 ```bash
-sqlite3 ./store/leadgen.db "INSERT OR IGNORE INTO companies (company_name, canonical_domain, website_url, niche, source_first_seen_at, source_last_seen_at)
-  VALUES ('$NAME', '$DOMAIN', '$URL', '$NICHE', datetime('now'), datetime('now'));
-  INSERT INTO discovery_signals (run_id, company_id, source, source_key, source_url, title, discovered_at)
-  SELECT '$RUN_ID', id, '$SOURCE', '$SOURCE'||':'||'$DOMAIN', '$URL', '$TITLE', datetime('now')
+sqlite3 ./store/leadgen.db "INSERT OR IGNORE INTO companies (company_name, canonical_domain, website_url, vertical, source_first_seen_at, source_last_seen_at)
+  VALUES ('$NAME', '$DOMAIN', '$URL', '$VERTICAL', datetime('now'), datetime('now'));
+  INSERT INTO discovery_signals (run_id, company_id, source, source_key, source_url, title, description, discovered_at)
+  SELECT '$RUN_ID', id, '$SOURCE', '$SOURCE'||':'||'$DOMAIN', '$URL', '$TITLE', '$DESCRIPTION', datetime('now')
   FROM companies WHERE canonical_domain = '$DOMAIN'
   ON CONFLICT(source_key) DO NOTHING;"
 ```
@@ -217,7 +224,7 @@ Gate: if discovery found zero candidates after trying every source above, tell t
 
 Score every `pending` company 0-100 against this rubric, using the actual site content (fetch the homepage, not just the search snippet):
 
-- **Niche/ICP fit (0-40)** — does the business genuinely match the target niche and region, and look like a plausible buyer for the pitch angle?
+- **Vertical/ICP fit (0-40)** — does the business genuinely match the target vertical and region, and look like a plausible buyer for the pitch angle?
 - **Signal strength (0-25)** — a hiring/gig posting that directly names the pain point scores highest; a generic directory listing with no explicit signal scores lowest, but is not disqualifying on its own.
 - **Reachability (0-15)** — a live site plus a plausible path to a named contact (team page, LinkedIn, visible email).
 - **Business viability (0-20)** — active site (not parked/dead), a size that plausibly matches who you can sell to (not a solo freelancer if you're pitching a team tool, not an enterprise if you're pitching an SMB price point).
@@ -249,7 +256,7 @@ Gate: if zero companies come out enriched, tell the user and stop.
 
 ### 6. Personalize
 
-For every enriched contact, write one short, specific outreach email: a one-line intro that references the actual discovery signal or something concrete on the company's site (not a generic template), a value proposition tied to the pitch angle, and a clear single call to action. Pick a `campaign_key` for the run (e.g. `<niche-slug>_<YYYYMMDD>`) if the caller didn't supply one.
+For every enriched contact, write one short, specific outreach email: a one-line intro that references the actual discovery signal or something concrete on the company's site (not a generic template), a value proposition tied to the pitch angle, and a clear single call to action. Pick a `campaign_key` for the run (e.g. `<vertical-slug>_<YYYYMMDD>`) if the caller didn't supply one.
 
 ```bash
 sqlite3 ./store/leadgen.db "INSERT INTO campaign_memberships (company_id, contact_id, campaign_key, pitch_angle, subject_line, personalized_intro, value_prop, cta, personalization_state)
@@ -264,7 +271,7 @@ Write the CSV — this is the deliverable even if no ESP is configured:
 
 ```bash
 sqlite3 -header -csv ./store/leadgen.db "SELECT c.company_name AS company, c.website_url AS website,
-  ct.name AS contact_name, ct.email AS contact_email, c.qualification_score AS score,
+  ct.email AS contact_email, c.qualification_score AS score,
   cm.subject_line, cm.personalized_intro, cm.cta
   FROM campaign_memberships cm
   JOIN companies c ON c.id = cm.company_id
@@ -273,7 +280,7 @@ sqlite3 -header -csv ./store/leadgen.db "SELECT c.company_name AS company, c.web
   > ./output/leads-$(date +%Y%m%d).csv
 ```
 
-Optional — push directly into an ESP: if the caller has Snov.io (or another ESP) API credentials configured, sync each row into a campaign there instead of, or in addition to, the CSV. Mark `sync_state = 'synced'` per membership; if a sync fails, mark `sync_state = 'failed'` and keep the row in the CSV so nothing is silently dropped. Stop the sync and report a partial result if the failure ratio across the batch exceeds 5%.
+Optional — push directly into an ESP: if the caller has Snov.io (or another ESP) API credentials configured, sync each row into a campaign there instead of, or in addition to, the CSV. On success, record the ESP's own campaign/list id and the sync time: `sqlite3 ./store/leadgen.db "UPDATE campaign_memberships SET sync_state = 'synced', external_campaign_id = '$ESP_CAMPAIGN_ID', synced_at = datetime('now') WHERE id = $MEMBERSHIP_ID;"`. If a sync fails, keep the row in the CSV so nothing is silently dropped, and record why: `sqlite3 ./store/leadgen.db "UPDATE campaign_memberships SET sync_state = 'failed', sync_error = '$ERROR_MESSAGE' WHERE id = $MEMBERSHIP_ID;"`. Stop the sync and report a partial result if the failure ratio across the batch exceeds 5%.
 
 Mark the run complete:
 
