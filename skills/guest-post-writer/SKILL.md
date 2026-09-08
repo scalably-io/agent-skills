@@ -8,6 +8,8 @@ metadata:
     path: overrides/skills/guest-post-writer/SKILL.md
     commit: f0f1753
     date: "2026-09-07"
+    rules_path: groups/content-ai/admin-rules/04-writing-quality.md
+    rules_commit: 8886bcc
   triggers: [write guest post, guest post, write article, content article, link building article, write post for site, draft guest post, write blog post for link]
   not_for:
     - "Processing a whole queue of briefs unattended — run this skill once per brief"
@@ -60,7 +62,7 @@ Expected: `./projects/cloud-backup-example-20260907/draft.md` passes both `ancho
 
 3. **Draft.** Write the full article from `research.md` + `context.md`, as a subagent if available. Include the external links, internal links, and a marker for each intended image — `<!-- image: <keyword>: <description> -->` — directly in the draft at the point the image belongs, not as a later addition. For a Listicle brief, also add one `<!-- screenshot: <company name> -->` marker under each listed company's entry, including competitors. Output: `./projects/<folder>/draft.md`.
 
-4. **Writing-quality pass.** Read the draft back and ask "what makes this obviously AI-generated?" Common tells to check for: uniform paragraph/sentence length, hedge-everything phrasing, em/en-dash overuse, generic "in conclusion" wrap-ups, unverifiable claims ("studies show" with no source), and repeated transition words. List every tell found, then rewrite. This is a two-pass process — draft, audit, rewrite — move on only after the rewrite.
+4. **Writing-quality pass.** Apply every rule in [references/writing-quality.md](references/writing-quality.md) before finalizing the draft. This is a two-pass process — draft, audit, rewrite — move on only after the rewrite.
 
 5. **Anchor check.** Invoke [anchor-policy](../anchor-policy/SKILL.md) against `draft.md` and the brief's anchor spec.
 
