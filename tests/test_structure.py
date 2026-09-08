@@ -38,7 +38,7 @@ def test_relative_links_resolve(skill):
     for target in re.findall(r"\]\((?!https?://|#|mailto:)([^)]+)\)", body):
         assert (skill / target.split("#")[0]).exists(), f"broken link {target}"
 
-@pytest.mark.parametrize("script", sorted(SKILLS_ROOT.glob("*/scripts/*")) if SKILLS_ROOT.exists() else [], ids=lambda p: f"{p.parent.parent.name}/{p.name}")
+@pytest.mark.parametrize("script", sorted(p for p in (SKILLS_ROOT.glob("*/scripts/*") if SKILLS_ROOT.exists() else []) if p.is_file()), ids=lambda p: f"{p.parent.parent.name}/{p.name}")
 def test_scripts_compile(script):
     if script.suffix == ".py":
         py_compile.compile(str(script), doraise=True)
