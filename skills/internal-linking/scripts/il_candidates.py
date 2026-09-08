@@ -63,6 +63,7 @@ Output (stdout): a compact human+machine table; full JSON with --json.
 """
 import sys, os, json, argparse, gzip, re, time, urllib.request, urllib.parse, urllib.error
 import warnings
+from pathlib import Path
 # Silence the harmless RequestsDependencyWarning (urllib3/chardet version mismatch
 # in any python3) — it's cosmetic but prints to stderr on every run and has made
 # the agent waste turns "investigating" it. Suppress so the run stays clean.
@@ -447,6 +448,7 @@ def main():
                      if u in profiles},
     }
     if a.json:
+        Path(a.json).parent.mkdir(parents=True, exist_ok=True)
         json.dump(result, open(a.json, "w"), ensure_ascii=False, indent=1)
 
     # compact stdout

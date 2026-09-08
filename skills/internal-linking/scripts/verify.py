@@ -28,6 +28,7 @@ Usage:
 Output (stdout): {"accepted":[...], "rejected":[{...,"reason":...}], "summary":{...}}
 """
 import sys, json, argparse, re
+from pathlib import Path
 
 
 def norm(s):
@@ -223,8 +224,10 @@ def main():
         used_anchors.add(a_lc)
 
     if a.ledger:
+        Path(a.ledger).parent.mkdir(parents=True, exist_ok=True)
         json.dump(ledger, open(a.ledger, "w"))
     if a.counts:
+        Path(a.counts).parent.mkdir(parents=True, exist_ok=True)
         json.dump({"anchors": anchor_ct, "targets": target_ct}, open(a.counts, "w"))
     print(json.dumps({
         "accepted": accepted,

@@ -33,6 +33,7 @@ Usage:
   python3 extract.py URL [--stealth] [--html-file F]
 """
 import sys, json, argparse, re
+from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 
@@ -428,6 +429,7 @@ def main():
             print(json.dumps({"url": a.url, "status": "error", "error": "empty html"}))
             return
         if a.save_html:
+            Path(a.save_html).parent.mkdir(parents=True, exist_ok=True)
             with open(a.save_html, "w", encoding="utf-8") as f:
                 f.write(html_str)
 

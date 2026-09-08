@@ -33,6 +33,7 @@ Exit code 1 if any unjudged links or orphan verdicts exist, so the pipeline
 notices instead of shipping a silently-shrunk campaign.
 """
 import sys, json, glob, os, argparse, re
+from pathlib import Path
 from urllib.parse import urlparse
 
 
@@ -122,6 +123,7 @@ def main():
         if norm_a(x["anchor"]) not in seen_a:
             seen_a.add(norm_a(x["anchor"])); reused_unique.append(x)
 
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     json.dump(final, open(a.out, "w"), indent=1, ensure_ascii=False)
     audit = {
         "verify_accepted": len(accepted),

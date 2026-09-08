@@ -34,6 +34,7 @@ Flags:
 Exit 0 always; orchestrator decides from the JSON. If "rematch" is empty -> loop done.
 """
 import argparse, json, os, glob, sys
+from pathlib import Path
 
 def load(p, default=None):
     try:
@@ -122,6 +123,7 @@ def main():
         for w in rematch:
             rounds[w["slug"]] = rounds.get(w["slug"], 0) + 1
         state["rounds"] = rounds
+        Path(R + ".loop-state.json").parent.mkdir(parents=True, exist_ok=True)
         json.dump(state, open(R + ".loop-state.json", "w"))
 
     n_re = len(rematch)
