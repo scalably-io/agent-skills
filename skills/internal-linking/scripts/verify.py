@@ -18,7 +18,7 @@ For ONE source, check each proposed (anchor, target) against:
  - global uniqueness: an anchor string maps to exactly ONE target across the whole campaign (ledger)
  - a source links a given target at most once; <= 3 links per source
 
-Stdlib only — runs with any python3 in the container.
+Stdlib only — runs with any python3.
 
 Usage:
   python3 verify.py --extract SRC.json --proposals PROP.json --targets TARG.json [--ledger LEDGER.json]

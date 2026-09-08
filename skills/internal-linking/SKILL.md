@@ -23,7 +23,7 @@ For one site, proposes internal links from a set of SOURCE pages to a set of TAR
 ## Requirements
 
 - Page fetching for `extract.py`: [Scrapling](https://github.com/D4Vinci/Scrapling) (`pip install "scrapling[fetchers]"`) — verified 2026-09-08 from the project README: `scrapling install` once to pull its bundled browser for JS/Cloudflare pages.
-- Search-performance data for free candidate selection (optional): a Google service account with Search Console read access, passed to `il_candidates.py --sa <path>`. Free option: omit `--sa` — the script degrades automatically to sitemap-only selection (fewer signals, still usable).
+- Search-performance data for free candidate selection (optional): a Google service account with Search Console read access, passed to `il_candidates.py --sa <path>`. Free option: omit `--sa` — the script degrades automatically to sitemap-only selection for TARGETS (fewer signals, still usable), but **returns zero SOURCE candidates** (source ranking needs GSC clicks/impressions and there's no sitemap-only fallback for that half). Without a Search Console service account, supply your own source list with `il_candidates.py --sources <file>` (one URL per line, `#` comments allowed) instead of leaving sources empty.
 - Keyword volume/difficulty to prioritize which targets are worth boosting (optional, paid): the [Ahrefs MCP server](https://ahrefs.com/blog/mcp-use-cases/) (`https://api.ahrefs.com/mcp/mcp`, OAuth, no free tier — same server verified for link-insertion-finder) or the [DataForSEO MCP server](https://github.com/dataforseo/mcp-server-typescript) (`npx dataforseo-mcp-server@latest`, needs a DataForSEO account — verified 2026-09-08 from the project README: open-source server, but the DataForSEO API itself requires paid credentials). Free option: skip this step entirely — `il_candidates.py`'s own GSC/sitemap ranking plus `extract.py`'s on-page headings and text (used for the per-target topic synthesis in Procedure step 3) already build usable target profiles with no paid API.
 - Subagents for matching and quality judgment. Free option: Claude Code's Agent tool; without it, run every source sequentially inline using the same instructions.
 - Sheet output (optional): any Sheets MCP server (e.g. [xing5/mcp-google-sheets](https://github.com/xing5/mcp-google-sheets)) or the [gspread](https://docs.gspread.org/) package (`pip install gspread`) — both verified 2026-09-08. Free option: the CSV output alone.
@@ -43,17 +43,27 @@ Paste into Claude Code with this skill installed (run from a repo/working direct
 /seo-ops:internal-linking run internal linking for example.com — auto-select targets and sources, up to 10 targets
 ```
 
-Expected command sequence (the agent runs these; see Procedure for what each step means):
+Expected command sequence (the agent runs these; see Procedure for what each step means). Shown here is the **no-API path** — no Search Console service account — which needs a plain-text `sources.txt` (one candidate source URL per line, `#` comments allowed) since sitemap-only selection can't rank sources on its own:
 
 ```bash
 mkdir -p ./projects/internal-linking/example-20260908-0930/{extract,profiles,proposals,verify,qa}
 
 python3 scripts/il_candidates.py --domain example.com \
     --ledger ./memory/internal-linking-ledger.jsonl \
+    --sources ./sources.txt \
     --max-targets 10 --max-sources 30 \
     --json ./projects/internal-linking/example-20260908-0930/profiles/candidates.json
-# -> prints a TARGET table and a SOURCE table; pick from them and write
+# -> prints a TARGET table (sitemap-only, since no --sa) and a SOURCE table (from
+#    ./sources.txt, filtered to the domain and to exclude chosen targets); pick from
+#    them and write
 #    ./projects/internal-linking/example-20260908-0930/targets.json and sources.json
+#
+# Fuller option, with a Search Console service account — ranks BOTH targets and
+# sources from real click/impression data instead of sitemap-only + a manual list:
+#   python3 scripts/il_candidates.py --domain example.com --sa /path/to/sa.json \
+#       --ledger ./memory/internal-linking-ledger.jsonl \
+#       --max-targets 10 --max-sources 30 --inspect \
+#       --json ./projects/internal-linking/example-20260908-0930/profiles/candidates.json
 
 python3 scripts/extract.py https://example.com/blog/backup-guide \
     > ./projects/internal-linking/example-20260908-0930/extract/backup-guide.json
@@ -96,6 +106,8 @@ Expected output: `final-links.json` (one record per validated, QA-passed link: `
    ```
    `--inspect` adds a per-URL Google index-status check on the target shortlist (slower, rate-limited, but the single most valuable target signal for a real campaign — a page that is *not indexed* AND *under-linked* floats to the top). Read the printed TARGET table (bucketed `page-2` = position 11-20, `high-impr-low-click` = demand with no payoff, `zero-traffic` = in the sitemap but no search data yet) and SOURCE table (ranked by clicks then impressions). Apply your own SEO judgment on top: drop anything topically useless that slipped through (thin pages, pure listicles, legal/contact pages), prefer a mix of informational and commercial targets, and never pad the list to hit the cap — fewer good pages beats more weak ones. Write the final choice to `targets.json` and `sources.json`, and say plainly in your reply that targets/sources were auto-selected.
 
+   **No Search Console access (no `--sa`):** you still get a real TARGET table from the sitemap alone, but the SOURCE table comes back empty — there's no click/impression signal to rank sources by, and sitemap-only has no fallback for that half. Pass `--sources <file>` (a plain-text list of candidate source URLs, one per line, `#` comments allowed) to supply the source set yourself; the script still applies its own filters (same domain, excludes chosen targets) before printing the table. Don't try to run the campaign with an empty source list.
+
    If you have an Ahrefs or DataForSEO MCP tool available (see Requirements), you can additionally pull search volume + keyword difficulty for each target's top query (from the candidate table's `top_queries` column) and prioritize high-volume/low-difficulty page-2 pages first — a small push (a few internal links) is far more likely to flip a low-difficulty page-2 ranker to page 1 than a high-difficulty one. This step is optional; skip it and rank by the GSC/sitemap buckets alone if no such tool is available.
 
    **Degrades, never fabricates:** if `--sa` was omitted or GSC access fails, the script automatically falls back to sitemap-only candidates (say so in your reply). If the sitemap is also empty, ask the caller for target/source lists instead of guessing URLs.
@@ -134,7 +146,7 @@ Expected output: `final-links.json` (one record per validated, QA-passed link: `
    Joins validity-accepted links with QA-pass verdicts on the full `(source, anchor, target)` key. **Don't reassemble the final list with your own glob/loop logic** — a naive join has shipped real bugs before (a filename-pattern glob silently dropping some sources; verdict-matching without the source key letting one source's FAIL poison an identical anchor/target pair from a different source). If it exits non-zero, it printed which links are unjudged (verify-accepted but no matching QA verdict — re-run QA for them) or orphaned (a QA verdict matching nothing — a key mismatch to fix); resolve those and re-run merge before delivering anything.
 
 9. **Deliver.** Read `final-links.json` fresh (never a stale copy) and pivot it into two blocks:
-   - **By source** — one row per source: `Source URL, Link 1, Anchor 1, Link 2, Anchor 2, Link 3, Anchor 3`. Fewer than 3 links for a source → leave the unused pair(s) blank, never pad.
+   - **By source** — one row per source: `Source URL, Link 1, Anchor 1, Link 2, Anchor 2, Link 3, Anchor 3`. Fewer than 3 links for a source → leave the unused pair(s) blank, never pad. Every `Anchor N` value is the record's `anchor_exact` field — the exact on-page casing `verify.py` extracted — never the matcher's proposed `anchor`, which may not match the page's own capitalization.
    - **By target** — one row per target that received ≥1 link: `Target URL, Count, Why`. `Count` = total links to that target across the run; `Why` is a short grounded reason if the target was auto-selected (bucket + position + impressions, from `candidates.json`), blank if the caller supplied the target list.
    Do the pivot in a small script (read `final-links.json`, write the rows), not by eyeballing — never invent or drop a link in the pivot. Write `./output/internal-linking-<campaign>.csv` by default and tell the caller the path. If a Google Sheet was asked for, push the same two blocks to a sheet via a Sheets MCP server or `gspread` (see Requirements) instead of, or in addition to, the CSV. If any anchor's `anchor_reuse_count` in `final-links.json` is above 1, mention it in your reply so the team can diversify at insertion — don't silently ship an over-optimized anchor profile.
 
@@ -150,5 +162,6 @@ Before delivering:
 2. `merge.py` exited 0 (no unjudged links, no orphan verdicts) before the CSV/Sheet was built.
 3. The CSV's source block has at most 3 (Link, Anchor) pairs per row, with unused pairs left blank, not padded.
 4. Every input source that produced 0 accepted links is still accounted for in the report (not silently omitted).
-5. Every delivered link was appended to `./memory/internal-linking-ledger.jsonl`.
+5. Every Anchor value in the delivered output is `anchor_exact` from the record, not the matcher's `anchor`.
+6. Every delivered link was appended to `./memory/internal-linking-ledger.jsonl`.
 </verification>

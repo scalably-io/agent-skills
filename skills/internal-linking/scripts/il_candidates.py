@@ -8,11 +8,17 @@
 # `google-auth` if you pass --sa (GSC access via a Google service account;
 # `pip install google-auth`). Without --sa (or with an unreadable file) the
 # script degrades automatically to sitemap-only candidate selection — no
-# error, just a smaller/less-ranked pool.
+# error, just a smaller/less-ranked pool. Without --sa, SOURCE candidates
+# come back empty (source ranking needs GSC clicks/impressions, and there's
+# no sitemap-only fallback for that half) — pass --sources FILE (one URL
+# per line, '#' comments allowed) to supply your own source list instead.
 # Env vars read: none — auth is by the --sa service-account JSON file.
 # Example invocation:
 #   python3 il_candidates.py --domain example.com --max-targets 15 \
 #       --max-sources 30 --json profiles/candidates.json
+#   # no-GSC-access path:
+#   python3 il_candidates.py --domain example.com --sources my-sources.txt \
+#       --json profiles/candidates.json
 """il_candidates — deterministic TARGET/SOURCE candidate selection for an
 internal-linking campaign. Agent-browser pattern: the CLI does all data
 gathering + ranking; the agent reads a COMPACT structured table and applies
@@ -40,6 +46,8 @@ Selection rules:
   SOURCES (link-from pages), up to 30:
     high clicks desc, then impressions desc; EXCLUDE pages used as a source in
     the last LEDGER_WINDOW_DAYS (unless the site is small < SMALL_SITE).
+    With --sources FILE instead: the given URLs are the source set, filtered
+    to the same domain and excluding chosen targets — no GSC ranking applied.
   A page is never both a target and a source in one run. Obvious junk URLs
   (/tag/ /category/ /wp- /cart /privacy /login ...) are pre-filtered.
 
@@ -48,14 +56,15 @@ sources) so even a 1000-page site stays context-safe.
 
 Usage:
   python3 il_candidates.py --domain example.com \
-      [--sa /path/to/service-account.json] [--ledger ledger.json] \
+      [--sa /path/to/service-account.json] [--sources sources.txt] \
+      [--ledger ledger.json] \
       [--days 90] [--max-targets 15] [--max-sources 30] [--json out.json]
 Output (stdout): a compact human+machine table; full JSON with --json.
 """
 import sys, os, json, argparse, gzip, re, time, urllib.request, urllib.parse, urllib.error
 import warnings
 # Silence the harmless RequestsDependencyWarning (urllib3/chardet version mismatch
-# in the container) — it's cosmetic but prints to stderr on every run and has made
+# in any python3) — it's cosmetic but prints to stderr on every run and has made
 # the agent waste turns "investigating" it. Suppress so the run stays clean.
 warnings.filterwarnings("ignore")
 from xml.etree import ElementTree as ET
@@ -295,11 +304,37 @@ def _recent_ledger_sources(ledger_path, window_days):
             used.add(_canon(e["source"]))
     return used
 
+def _load_sources_file(path, domain):
+    """--sources FILE: one URL per line, '#' starts a comment (inline or
+    whole-line), blank lines ignored. Returns canonicalized, deduped URLs
+    restricted to the given domain (www-insensitive) — the caller still
+    excludes chosen targets on top of this."""
+    dom = domain.lower()
+    if dom.startswith("www."):
+        dom = dom[4:]
+    urls, seen = [], set()
+    for line in open(path, encoding="utf-8"):
+        line = line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        u = _canon(line)
+        host = urllib.parse.urlparse(u).netloc.lower()
+        if host != dom or u in seen:
+            continue
+        seen.add(u)
+        urls.append(u)
+    return urls
+
 # ---------- main ----------
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--domain", required=True)
     ap.add_argument("--sa", help="path to a Google service account JSON key with Search Console read access; omit to skip GSC and use sitemap-only selection")
+    ap.add_argument("--sources", help="path to a plain-text file of source URLs (one per line, "
+                     "'#' starts a comment) to use as the SOURCE set instead of GSC-ranked "
+                     "sources; still filtered to the same domain and to exclude chosen "
+                     "targets. Use this for the no-Search-Console-access path — without --sa, "
+                     "source ranking needs GSC clicks/impressions and returns empty otherwise.")
     ap.add_argument("--ledger")
     ap.add_argument("--days", type=int, default=90)
     ap.add_argument("--max-targets", type=int, default=15)
@@ -372,22 +407,30 @@ def main():
     chosen_target_urls = {t["url"] for t in targets[: a.max_targets]}
 
     # ---- source candidates ----
-    # A source must be a real content page with body prose to host links — NOT
-    # the homepage or a section/index listing (those are hubs: little prose, mostly
-    # nav, yield 0-1 body links and waste a slot). Exclude them from sources too.
-    src = []
-    for u in universe:
-        if u in chosen_target_urls:
-            continue
-        if u == homepage or INDEXLIKE.search(u):  # homepage + listing/index pages
-            continue
-        g = gsc.get(u)
-        if not g:
-            continue
-        if not small and u in recent_src:
-            continue
-        src.append({"url": u, **g})
-    src.sort(key=lambda x: (-(x["clicks"] or 0), -(x["impressions"] or 0)))
+    if a.sources:
+        # No-GSC-access path: the caller supplies the source set directly.
+        # Still apply the script's own filters — same domain, not a chosen
+        # target — but skip the GSC ranking/exclusion logic below (there's
+        # no click/impression data to rank by).
+        src = [{"url": u, **{k: None for k in ("clicks", "impressions", "ctr", "position")}}
+               for u in _load_sources_file(a.sources, domain) if u not in chosen_target_urls]
+    else:
+        # A source must be a real content page with body prose to host links — NOT
+        # the homepage or a section/index listing (those are hubs: little prose, mostly
+        # nav, yield 0-1 body links and waste a slot). Exclude them from sources too.
+        src = []
+        for u in universe:
+            if u in chosen_target_urls:
+                continue
+            if u == homepage or INDEXLIKE.search(u):  # homepage + listing/index pages
+                continue
+            g = gsc.get(u)
+            if not g:
+                continue
+            if not small and u in recent_src:
+                continue
+            src.append({"url": u, **g})
+        src.sort(key=lambda x: (-(x["clicks"] or 0), -(x["impressions"] or 0)))
     sources = src[: max(a.max_sources * 2, 50)]
 
     result = {
