@@ -59,7 +59,18 @@ Expected: `./output/contact-emails-20260908-1400.csv` with one row per domain (`
    5. **Fall back to Hunter** (see Requirements) only when scraping genuinely fails — every contact path blocked or 404, regex finds nothing, or every match was rejected as a decoy. Take the most generic email returned, in priority order `info@`, `contact@`, `hello@`, `editor@`. On a Hunter rate-limit or auth error, skip it — that domain yields `/`.
    6. Emit `{"domain","email"}` for the domain (`email` = the address found, or `/`). Never omit a domain.
 
-3. **Parallelize larger batches.** For anything beyond a handful of domains, dispatch chunks of domains to subagents in parallel rather than working through the list sequentially in the main session — one message dispatching every chunk at once, not a few at a time. A useful pattern for a worker subagent here: give it a restricted tool set (fetch/search tools plus the ability to write its results to a file, nothing else — specifically no ability to spawn further subagents or message other agents) so a worker can't nest-dispatch or drift outside its one job. Pick a `run_id` for the batch (e.g. `bce-<YYYYMMDD-HHMM>`) and have each worker write its rows to `./runs/<run_id>/chunk-<i>.jsonl` — one `{"domain","email"}` object per line — rather than returning them as prose, since prose responses fragment across many parallel workers and are unreliable to reassemble. Chunk size: roughly 12 domains per worker, capped at around 8 workers running concurrently (grow the chunk size before growing the worker count past that — a much higher concurrent-worker count has been observed to exhaust local browser-launch limits and produce hard failures on some fetch backends; if you hit that, lower the worker count and grow chunks instead). If you are already running as a subagent, nested dispatch is usually unavailable — skip the fan-out and process every chunk sequentially inline using the same waterfall.
+3. **Parallelize larger batches.** For anything beyond a handful of domains, dispatch chunks of domains to subagents in parallel rather than working through the list sequentially in the main session — one message dispatching every chunk at once, not a few at a time. A useful pattern for a worker subagent here: give it a restricted tool set (fetch/search tools plus the ability to write its results to a file, nothing else — specifically no ability to spawn further subagents or message other agents) so a worker can't nest-dispatch or drift outside its one job. Pick a `run_id` for the batch (e.g. `bce-<YYYYMMDD-HHMM>`) and have each worker write its rows to `./runs/<run_id>/chunk-<i>.jsonl` — one `{"domain","email"}` object per line — rather than returning them as prose, since prose responses fragment across many parallel workers and are unreliable to reassemble.
+
+   Chunk sizing (target: 12 domains/worker):
+
+   | Domain count | Chunking |
+   |---|---|
+   | 1-12 | 1 worker, no chunking |
+   | 13-100 | `ceil(N/12)` workers, 12 domains/chunk |
+   | 101-500 | parallel; prefer 15-20 domains/chunk if worker throughput caps out |
+   | >500 | ask the caller to split the list — don't fan out past this size in one run |
+
+   Hard cap: 8 concurrent workers in flight. If `ceil(N/12)` would exceed 8, grow the chunk size instead of the worker count (`ceil(N/8)` domains per chunk, 8 chunks) — a much higher concurrent-worker count has been observed to exhaust local browser-launch limits and produce hard failures on some fetch backends; if you hit that, lower the worker count and grow chunks instead. If you are already running as a subagent, nested dispatch is usually unavailable — skip the fan-out and process every chunk sequentially inline using the same waterfall.
 
 4. **Merge the chunk files.** Read every `./runs/<run_id>/chunk-*.jsonl`, one JSON object per line, and merge by domain (last write wins on a duplicate):
    ```bash

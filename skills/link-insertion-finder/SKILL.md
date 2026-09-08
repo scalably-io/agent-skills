@@ -31,7 +31,7 @@ Given a target site, anchor text, and a destination URL, finds the 3 best existi
 | | |
 |---|---|
 | Input | Target site (the publisher/blog where the link would go), anchor text, destination URL, and optionally "check competition" |
-| Output | Delivered inline in chat: up to 3 ranked placements, each with article URL, section heading, exact insertion sentence (anchor in `[brackets]`), a 0-10 score, and a one-line rationale; plus the competition-check result if requested |
+| Output | Delivered inline in chat: up to 3 ranked placements, each with article URL, section heading, exact insertion sentence (anchor in `[brackets]`), a 0-10 score, and a one-line rationale; plus the competition-check result if requested. Each accepted proposal is also appended to the per-site ledger at `./projects/link-insertion/<site-slug>/proposed.jsonl` |
 
 ## Worked example
 
@@ -63,7 +63,9 @@ Competition check: no competitor links found on this site.
 
 1. **Parse the request.** Target site, anchor text, destination URL, and (optional) multiple anchor variants or a "check competition" flag. If the request gives several anchor variants for the same site, treat it as one crawl — rank the same candidate pool per anchor and present ranked sets side by side.
 
-2. **Discover candidates (1-2 fetches).** In priority order:
+2. **Check the placement ledger.** Before ranking anything, read `./projects/link-insertion/<site-slug>/proposed.jsonl` for this target site (slugify the site's hostname), if it exists — one JSON object per line, each shaped `{"date", "target_url", "anchor", "client_url"}`. Exclude any candidate whose URL already appears as a `target_url` proposed for the same `anchor` — that site+anchor placement was already suggested and must not be repeated. Keep the excluded set in mind through discovery and scoring below.
+
+3. **Discover candidates (1-2 fetches).** In priority order:
    1. `<site>/sitemap.xml` — most editorial sites group post URLs under a `<loc>` list, often with `<lastmod>`; sort by `<lastmod>` desc and take the top 30.
    2. If the sitemap is an index, follow the `<sitemap>` child most likely to hold posts (named `post-sitemap.xml` / `blog-sitemap.xml`).
    3. No sitemap: fetch the blog index (`/blog`, `/articles`, `/news`) and extract article links; paginate once if needed.
@@ -71,20 +73,20 @@ Competition check: no competitor links found on this site.
    5. Last resort: a `site:<site> "<keyword>"` web search (returns roughly 10 candidates).
    Cap the candidate pool at 30 — a larger pool doesn't improve the final ranking, since scoring the top 3 is the bottleneck, not pool size.
 
-3. **Quick filter pass — one batched fetch of all candidates.** Fetch all ~30 candidates in one bounded, parallel call rather than one at a time (`scrape.py --urls-file` equivalent, or Scrapling's `extract get`/`stealthy-fetch` per URL if the site needs JS rendering). For each: extract title, publish date (prefer the sitemap's `<lastmod>`, else a visible date, else mark unknown — don't drop for unknown date alone if `<lastmod>` gave recency), H2 headings, and an approximate word count. Drop: pre-2024 articles (unless the caller explicitly approves older), ≥50% numbered H2s (a listicle — body-prose insertion is impossible there), under 500 words (too thin for a natural insertion), and anything that 404s or stays blocked after a retry. Typical drop rate is around 50%, leaving roughly 15 survivors.
+4. **Quick filter pass — one batched fetch of all candidates.** Fetch all ~30 candidates in one bounded, parallel call rather than one at a time (`scrape.py --urls-file` equivalent, or Scrapling's `extract get`/`stealthy-fetch` per URL if the site needs JS rendering). For each: extract title, publish date (prefer the sitemap's `<lastmod>`, else a visible date, else mark unknown — don't drop for unknown date alone if `<lastmod>` gave recency), H2 headings, and an approximate word count. Drop: pre-2024 articles (unless the caller explicitly approves older), ≥50% numbered H2s (a listicle — body-prose insertion is impossible there), under 500 words (too thin for a natural insertion), and anything that 404s or stays blocked after a retry. Typical drop rate is around 50%, leaving roughly 15 survivors.
 
-4. **Full-body scoring — one batched fetch of the survivors.** Fetch all survivors in one batched call. For each, read the article body (ignore residual nav/footer text if present) and score 0-10:
+5. **Full-body scoring — one batched fetch of the survivors.** Fetch all survivors in one batched call. For each, read the article body (ignore residual nav/footer text if present) and score 0-10:
    - **Topical fit (0-4)** — does the article's actual subject sit adjacent to the anchor's domain? Direct match = 4, adjacent = 2-3, tangential = 0-1.
    - **Insertion naturalness (0-3)** — is there a paragraph where the anchor phrase fits with a small rewrite? Direct fit = 3, one-sentence reshape = 2, paragraph restructure = 1, no fit = 0.
    - **Recency (0-1.5)** — scale by publish year (older = lower).
    - **Authority signals (0-1.5)** — named author, real bio, dated comments, internal link density.
    Pick the top 3 by total score; tie-break on recency.
 
-5. **Verify and draft the insertion — no re-fetch.** From the same content already fetched in step 4, for each of the top 3: quote 1-2 context sentences ending at the insertion point, name the section heading (the `##`/`###` above that paragraph) and write the insertion sentence with the anchor wrapped in `[brackets]` for the caller to convert into a real link. If an explicit reachability re-check is wanted, run one more batched fetch of just the top 3 and confirm each is reachable.
+6. **Verify and draft the insertion — no re-fetch.** From the same content already fetched in step 5, for each of the top 3: quote 1-2 context sentences ending at the insertion point, name the section heading (the `##`/`###` above that paragraph) and write the insertion sentence with the anchor wrapped in `[brackets]` for the caller to convert into a real link. If an explicit reachability re-check is wanted, run one more batched fetch of just the top 3 and confirm each is reachable.
 
-6. **Optional competition check.** If asked to "check competition": query the destination URL's known competitors via the Ahrefs MCP server (or an equivalent backlink API) for existing links from the target site, or fall back to a site-scoped search for competitor URLs. Report as `Site already links to: <competitor URLs>` or `No competitor links found on this site.` A competitor link found is a warning attached to the result, never a reason to withhold the placements — the caller decides whether to use a flagged placement.
+7. **Optional competition check.** If asked to "check competition": query the destination URL's known competitors via the Ahrefs MCP server (or an equivalent backlink API) for existing links from the target site, or fall back to a site-scoped search for competitor URLs. Report as `Site already links to: <competitor URLs>` or `No competitor links found on this site.` A competitor link found is a warning attached to the result, never a reason to withhold the placements — the caller decides whether to use a flagged placement.
 
-7. **Deliver.** Reply to the user in chat, formatted as in the worked example: up to 3 ranked placements (article URL, section, insertion sentence with `[anchor]`, score, one-line rationale), plus the competition-check line if it was requested. Never end with a bare decline — a weak niche match or an off-topic site is a caveat you attach to the best candidates found, not a reason to return nothing. The only case where a technical block is an acceptable final answer is when the site cannot be crawled at all (fully blocked even after a retry); say so plainly rather than returning weak guesses.
+8. **Deliver.** Reply to the user in chat, formatted as in the worked example: up to 3 ranked placements (article URL, section, insertion sentence with `[anchor]`, score, one-line rationale), plus the competition-check line if it was requested. Never end with a bare decline — a weak niche match or an off-topic site is a caveat you attach to the best candidates found, not a reason to return nothing. The only case where a technical block is an acceptable final answer is when the site cannot be crawled at all (fully blocked even after a retry); say so plainly rather than returning weak guesses. After delivery, append one JSON line per delivered placement to `./projects/link-insertion/<site-slug>/proposed.jsonl` (`{"date", "target_url", "anchor", "client_url"}`, creating the file and its parent directory if needed) so a later run for the same site+anchor excludes it in step 2.
 
 <verification>
 Before sending:
