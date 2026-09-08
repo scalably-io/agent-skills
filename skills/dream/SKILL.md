@@ -52,8 +52,6 @@ Cron, from any machine with Claude Code installed:
 30 23 * * * cd /path/to/project && claude -p "/agent-ops:dream" >> logs/dream.log 2>&1
 ```
 
-Use `0 9 * * 1` for weekly Monday-morning skills and `0 16 * * 5` for the Friday check-in.
-
 ## Procedure
 
 ### 1. Load the contract

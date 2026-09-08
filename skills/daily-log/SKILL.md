@@ -42,15 +42,13 @@ Expected: the skill finds today's session transcripts under `~/.claude/projects/
 
 ## How to schedule this
 
-Claude Code scheduled task (interactive): run `/schedule` and describe the cadence, e.g. "every day at 23:30 run /agent-ops:dream". The task runs the skill in a fresh session.
+Claude Code scheduled task (interactive): run `/schedule` and describe the cadence, e.g. "every day at 23:30 run /agent-ops:daily-log". The task runs the skill in a fresh session.
 
 Cron, from any machine with Claude Code installed:
 
 ```bash
-30 23 * * * cd /path/to/project && claude -p "/agent-ops:dream" >> logs/dream.log 2>&1
+30 23 * * * cd /path/to/project && claude -p "/agent-ops:daily-log" >> logs/daily-log.log 2>&1
 ```
-
-Use `0 9 * * 1` for weekly Monday-morning skills and `0 16 * * 5` for the Friday check-in.
 
 ## Procedure
 
