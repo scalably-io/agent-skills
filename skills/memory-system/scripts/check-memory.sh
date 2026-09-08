@@ -13,9 +13,9 @@
 # Prints "OK" when clean, "VIOLATION: ..." lines otherwise. Exit 1 on violations.
 set -u
 
-GROUP="${MEMORY_ROOT:-.}"
-MEM="$GROUP/memory"
-LC="$GROUP/rules/learned-corrections.md"
+ROOT="${MEMORY_ROOT:-.}"
+MEM="$ROOT/memory"
+LC="$ROOT/rules/learned-corrections.md"
 V=0
 
 # Scope: which surfaces this run validates.
@@ -93,7 +93,7 @@ for d in $TREE_DIRS; do
       sed -n '2,8p' "$f" | grep -q "^$field" || viol "$rel frontmatter missing '$field'"
     done
     s=$(sed -n '2,8p' "$f" | grep '^summary:' | head -1 | cut -c9-)
-    [ -n "$s" ] && [ "${#s}" -gt 170 ] && viol "$rel summary is ${#s} chars (cap 160)"
+    [ -n "$s" ] && [ "${#s}" -gt 160 ] && viol "$rel summary is ${#s} chars (cap 160)"
     n=$(grep -cve '^[[:space:]]*$' "$f")
     [ "$n" -gt 150 ] && viol "$rel has $n lines (cap 150 — split it)"
     if [ -f "$MEM/index.md" ]; then
@@ -135,7 +135,8 @@ if [ -f "$LC" ]; then
   [ "${legacy:-0}" -gt 0 ] && warn "learned-corrections.md: $legacy legacy rule(s) lack evidence metadata — audit; do not auto-upgrade"
   bad_evidence=$(sed -n '/^## Rules/,/^## /p' "$LC" | grep '^- ' | grep 'evidence:' | grep -cv 'evidence:user-explicit' || true)
   [ "${bad_evidence:-0}" -gt 0 ] && viol "learned-corrections.md: $bad_evidence rule(s) use non-explicit evidence metadata"
-  if grep -Eqi 'continued (using|the workflow).*without complaint|accepted without objection|approved.*bez (zamerke|prigovora)|bez (zamerke|prigovora).*approved' "$LC"; then
+  # approval-by-silence phrases; add your team's own languages here
+  if grep -Eqi 'continued (using|the workflow).*without complaint|accepted without objection|approved.*bez (zamerke|prigovora)|bez (zamerke|prigovora).*approved|approved.*no objections?|no objections?.*approved' "$LC"; then
     viol "learned-corrections.md contains approval-by-silence language"
   fi
   # size sanity
@@ -150,10 +151,11 @@ fi
 for f in "$MEM/profile.md" "$MEM/weekly-summary.md" "$LC"; do
   [ -f "$f" ] || continue
   if grep -Eqi '(whatsapp|phone|telefon|tel\.?)[^[:cntrl:]]*[1-9][0-9]{8,14}|[1-9][0-9]{8,14}@s\.whatsapp\.net' "$f"; then
-    warn "${f#"$GROUP/"} contains a raw phone-like identifier — remove after provenance review"
+    warn "${f#"$ROOT/"} contains a raw phone-like identifier — remove after provenance review"
   fi
-  if grep -Eqi 'continued (using|the workflow).*without complaint|accepted without objection|approved.*bez (zamerke|prigovora)|bez (zamerke|prigovora).*approved' "$f"; then
-    viol "${f#"$GROUP/"} contains approval-by-silence language"
+  # approval-by-silence phrases; add your team's own languages here
+  if grep -Eqi 'continued (using|the workflow).*without complaint|accepted without objection|approved.*bez (zamerke|prigovora)|bez (zamerke|prigovora).*approved|approved.*no objections?|no objections?.*approved' "$f"; then
+    viol "${f#"$ROOT/"} contains approval-by-silence language"
   fi
 done
 
@@ -176,7 +178,7 @@ if [ -f "$LC" ] && [ ! -f "$MEM/reference/corrections-log.md" ]; then
 fi
 
 # ── Projects index (workspace surface — full scope only) ────────────────────
-PJ="$GROUP/projects"
+PJ="$ROOT/projects"
 if [ "$SCOPE" = full ] && [ -d "$PJ" ]; then
   ndirs=$(find "$PJ" -maxdepth 1 -mindepth 1 -type d ! -name archive | wc -l)
   if [ "$ndirs" -ge 3 ] && [ ! -f "$PJ/INDEX.md" ]; then
@@ -197,8 +199,8 @@ fi
 # live cron-driven pipeline — these are written daily and must stay at root;
 # counting them made the tidy threshold unreachable.
 if [ "$SCOPE" = full ]; then
-loose=$(find "$GROUP" -maxdepth 1 -type f \
-  ! -name 'CLAUDE.md' ! -name 'group.config.json' ! -name 'CLAUDE.md.local' \
+loose=$(find "$ROOT" -maxdepth 1 -type f \
+  ! -name 'CLAUDE.md' ! -name '*.config.json' ! -name 'CLAUDE.md.local' \
   ! -name '*state*.json' ! -name '*state*.json.*' ! -name '*.state.*' \
   ! -name '*sync-log*' ! -name '*sync-watermark*' \
   ! -name '*.lock' ! -name '.*' \

@@ -14,9 +14,9 @@
 # AFTER the week's content is final. Refuses to run twice on the same week.
 set -eu
 
-GROUP="${MEMORY_ROOT:-.}"
-WS="$GROUP/memory/weekly-summary.md"
-ARCH="$GROUP/memory/weekly-archive"
+ROOT="${MEMORY_ROOT:-.}"
+WS="$ROOT/memory/weekly-summary.md"
+ARCH="$ROOT/memory/weekly-archive"
 
 [ -f "$WS" ] || { echo "no weekly-summary.md — nothing to archive"; exit 0; }
 mkdir -p "$ARCH"

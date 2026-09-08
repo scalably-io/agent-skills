@@ -8,7 +8,7 @@ metadata:
     path: overrides/skills/guest-post-writer/SKILL.md
     commit: f0f1753
     date: "2026-09-07"
-    rules_path: groups/content-ai/admin-rules/04-writing-quality.md
+    rules_path: admin-rules/04-writing-quality.md
     rules_commit: 97f1383
   triggers: [write guest post, guest post, write article, content article, link building article, write post for site, draft guest post, write blog post for link]
   not_for:

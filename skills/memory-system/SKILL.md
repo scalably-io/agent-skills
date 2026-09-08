@@ -88,6 +88,8 @@ Design principles, in priority order:
   reference/automation-opportunities.md   NOT injected (retired from the
                                 injection set by migration — see below)
   daily/                        raw daily logs (written elsewhere; never edit)
+  feedback/                     raw weekly feedback replies + opt-out flag (written by
+                                friday-feedback; never by the dream)
   weekly-archive/               finished weeks: YYYY-Www.md
   people/               tree    one file per person (multi-user projects)
   projects/              tree    one file per active project or engagement
@@ -125,7 +127,7 @@ Workflows, specs, background. Subsections as needed.
 - `summary` ≤ 160 chars. It becomes this file's line in `index.md`, so write it as the retrieval hook: what would make a future agent open this file.
 - `updated` — stamp with today's date on EVERY write to the file.
 - Body: current state first, detail last. `## Now` is replaced wholesale each time it changes.
-- One topic per file. A file over 150 lines gets split (e.g. `reference/na-pipeline.md` + `reference/na-sheets.md`) and both halves indexed.
+- One topic per file. A file over 150 lines gets split (e.g. `reference/orders-pipeline.md` + `reference/orders-sheets.md`) and both halves indexed.
 
 ### The injected four
 

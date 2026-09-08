@@ -79,7 +79,8 @@ The daily log is an evidence ledger, not authority to invent a preference. Tag e
 Session transcripts for the current project live at `~/.claude/projects/<project>/*.jsonl` (Claude Code); other runtimes keep an equivalent per-session log directory — substitute its path below.
 
 ```bash
-find ~/.claude/projects/ -name "*.jsonl" -mmin -1440 -not -path "*/subagents/*" -type f 2>/dev/null
+PROJECT_DIR=~/.claude/projects/$(pwd | tr '/' '-')
+find "$PROJECT_DIR" -name "*.jsonl" -mmin -1440 -not -path "*/subagents/*" -type f 2>/dev/null
 ```
 
 **Hard rule — file reads:** never use a whole-file Read on raw session `.jsonl` files; they are large and a whole-file read fails or is wasteful. Use the grep/Bash extraction in step 2 instead. For any file you do Read in full (`.md`, `.json`, `.log`), pass `offset`/`limit` — start with `limit=500` and page via `offset`; never read a whole large file in one call. If a Read errors on size, immediately retry the same file paginated rather than abandoning it.
@@ -159,7 +160,7 @@ Only explicit human evidence can be a correction or preference:
 User-A filtered 3 batches of websites by niche and extracted emails for example.com. Morning task briefing was delivered automatically.
 
 ## Actions
-- [done] Filtered ~100 websites — removed news, India, casino, delivered 73 clean tech/business sites as CSV
+- [done] Filtered ~100 websites — removed off-topic categories (news, gambling), delivered 73 clean tech/business sites as CSV
 - [done] Matched 91 websites suitable for example.com — CSV delivered
 - [done] Scheduled task briefing sent at 10:30
 
