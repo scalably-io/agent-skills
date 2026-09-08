@@ -55,8 +55,13 @@ Expected: the template is copied, filled with the Q3 data, QA-checked, and saved
 ### 1. Copy the template
 
 ```bash
-mkdir -p ./projects/<slug> && cp templates/report.html ./projects/<slug>/output.html
+mkdir -p ./projects/<slug> && cp <skill dir>/templates/report.html ./projects/<slug>/output.html
 ```
+
+(`<skill dir>` is wherever this skill's files live in your setup — after a
+plugin install, find it with `find ~/.claude/plugins -path
+'*/report/SKILL.md'` and use its parent directory; from inside the
+skill's own folder, just `cp templates/report.html ...`.)
 
 ### 2. Edit the copy
 

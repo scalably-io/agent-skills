@@ -24,7 +24,7 @@ Labels a batch of website domains with a primary niche, secondary niche, and con
 ## Requirements
 
 - Node.js 18+ (both companion scripts use the global `fetch` and standard library only).
-- Domain classification via an LLM: either `ANTHROPIC_API_KEY` (direct Anthropic API, cheapest) or the Claude Code CLI (`claude -p --model haiku`) on PATH. Free option: run classification through Claude Code itself — dispatch parallel subagents with the rubric below instead of the standalone script (see Procedure step 3, both paths documented).
+- Domain classification via an LLM: either `ANTHROPIC_API_KEY` (direct Anthropic API, cheapest) or the Claude Code CLI (`claude -p --model haiku`) on PATH. `ANTHROPIC_BASE_URL` (optional, defaults to `https://api.anthropic.com`) — set it to point the direct-API path at a compatible proxy or gateway. Free option: run classification through Claude Code itself — dispatch parallel subagents with the rubric below instead of the standalone script (see Procedure step 3, both paths documented).
 - Optional bulk crawling substitute: [Scrapling](https://github.com/D4Vinci/Scrapling) (`pip install "scrapling[fetchers]"`) if you prefer a browser-capable crawler over the included plain-HTTP `scraper.mjs` for JS-heavy or Cloudflare-protected sites — verified 2026-09-08 from the project README (`scrapling extract get/fetch/stealthy-fetch <url> <output>`).
 - xlsx/csv input or output (optional): Python + `openpyxl`/`pandas`, or any spreadsheet tool.
 
@@ -56,9 +56,13 @@ Expected: a table (or `./output/classified-20260908.csv` for larger batches) wit
 
 3. **Scrape.** Write the normalized domains one per line to a temp file, then run the bounded scraper:
    ```bash
-   node references/scraper.mjs domains.json scraped.json
+   node <skill dir>/references/scraper.mjs domains.json scraped.json
    ```
-   (`domains.json` is a JSON array of bare domains.) It fetches the homepage (falling back `https://` → `http://`) plus a discovered `/about` page, extracts title/meta/headings/body text, and writes `scraped.json` — one `{domain,title,meta,headings,body,aboutBody,status}` record per domain, `status:"error"` on DNS/HTTP failure. Adaptive concurrency (starts at 30, halves on a >50% error-rate batch) and periodic checkpointing mean an interrupted run resumes from `scraped.json` on retry. If a batch is dominated by JS-rendered or Cloudflare-protected sites, swap in Scrapling (see Requirements) for the fetch step instead — the schema classification consumes is the same shape.
+   (`<skill dir>` is wherever this skill's files live in your setup — after
+   a plugin install, find it with `find ~/.claude/plugins -path
+   '*/classify/SKILL.md'` and use its parent directory; from inside the
+   skill's own folder, just `node references/scraper.mjs ...`. `domains.json`
+   is a JSON array of bare domains.) It fetches the homepage (falling back `https://` → `http://`) plus a discovered `/about` page, extracts title/meta/headings/body text, and writes `scraped.json` — one `{domain,title,meta,headings,body,aboutBody,status}` record per domain, `status:"error"` on DNS/HTTP failure. Adaptive concurrency (starts at 30, halves on a >50% error-rate batch) and periodic checkpointing mean an interrupted run resumes from `scraped.json` on retry. If a batch is dominated by JS-rendered or Cloudflare-protected sites, swap in Scrapling (see Requirements) for the fetch step instead — the schema classification consumes is the same shape.
 
 4. **Build the rubric.** Before classifying, write a one-line **definition** per niche (the core business that IS this niche, not a keyword it merely mentions) plus these principles, verbatim — they are what keeps a small/fast model accurate:
    - **Evidence first** — state the site's primary business before tagging.
@@ -69,7 +73,7 @@ Expected: a table (or `./output/classified-20260908.csv` for larger batches) wit
    Add 2-3 few-shot examples, including one near-miss, e.g. `example.org → Finance, not AI (a fund that uses ML internally, doesn't sell it)`.
 
 5. **Classify.** Two equivalent paths — pick whichever tooling is available:
-   - **Script path** (no subagent runtime needed): `node references/classifier.mjs scraped.json niches.json classified.json --parallel 3`. Reads `scraped.json`, batches domains (50/batch via the CLI path, 30/batch via the direct-API path), classifies each batch with Haiku, retries a failed batch twice before marking it `Unclassified`, and resumes from `classified.json` if interrupted.
+   - **Script path** (no subagent runtime needed): `node <skill dir>/references/classifier.mjs scraped.json niches.json classified.json --parallel 3` (from inside the skill's own folder, just `node references/classifier.mjs ...`). Reads `scraped.json`, batches domains (50/batch via the CLI path, 30/batch via the direct-API path), classifies each batch with Haiku, retries a failed batch twice before marking it `Unclassified`, and resumes from `classified.json` if interrupted.
    - **Subagent path** (Claude Code with the Agent tool): split `scraped.json` into chunks of 50 domains and dispatch every chunk in a single message (parallel, not sequential) to subagents carrying the rubric from step 4 and that chunk's signals — no web access needed, they judge only the passed-in signals. If already running as a subagent (nested dispatch is unavailable), skip the fan-out and classify every chunk sequentially inline using the same rubric.
    - Either way: a domain that comes back malformed or missing gets one re-classification attempt; still bad, mark `Unclassified`. Invariant: classified count == input count, always.
 

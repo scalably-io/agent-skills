@@ -179,7 +179,10 @@ State model: `companies` -> `discovery_signals` (why it was found) -> `qualifica
 
 Every `Gate:` below that stops the run also closes out `pipeline_runs` rather than leaving it stuck at `status = 'running'` — before telling the user and stopping, run:
 
+Free-text values interpolated into a single-quoted SQL string (`$NAME`, `$REASON`, `$VERTICAL` — a company name, an error/decision reason, or a caller-supplied vertical can contain an apostrophe) must be escaped first: `REASON=${REASON//\'/\'\'}` — double every single quote — applied the same way wherever these three are used below.
+
 ```bash
+REASON=${REASON//\'/\'\'}
 sqlite3 ./store/leadgen.db "UPDATE pipeline_runs SET status = 'aborted', last_error = '$REASON', finished_at = datetime('now') WHERE id = '$RUN_ID';"
 ```
 
@@ -191,6 +194,7 @@ with `$REASON` set to that gate's own stop condition (e.g. `zero candidates disc
 Parse the request: vertical, region, target prospect count, pitch angle, and subcommand (`run` if none given). Generate a run id: `leadgen_<YYYYMMDD_HHmm>`. `resume` reuses the original run id instead.
 
 ```bash
+VERTICAL=${VERTICAL//\'/\'\'}
 sqlite3 ./store/leadgen.db "INSERT INTO pipeline_runs (id, trigger_type, status, checkpoint_json)
   VALUES ('$RUN_ID', 'manual', 'running', json_object('vertical', '$VERTICAL', 'region', '$REGION', 'target', $TARGET, 'pitch_angle', '$PITCH_ANGLE'));"
 ```
@@ -208,6 +212,8 @@ Alternate source — **hiring/gig signal search** (use when the vertical is defi
 Insert each candidate, relying on the `UNIQUE(canonical_domain)` constraint to silently skip repeats across runs:
 
 ```bash
+NAME=${NAME//\'/\'\'}
+VERTICAL=${VERTICAL//\'/\'\'}
 sqlite3 ./store/leadgen.db "INSERT OR IGNORE INTO companies (company_name, canonical_domain, website_url, vertical, source_first_seen_at, source_last_seen_at)
   VALUES ('$NAME', '$DOMAIN', '$URL', '$VERTICAL', datetime('now'), datetime('now'));
   INSERT INTO discovery_signals (run_id, company_id, source, source_key, source_url, title, description, discovered_at)
@@ -232,6 +238,7 @@ Score every `pending` company 0-100 against this rubric, using the actual site c
 Decision: `qualified` at `score >= min_score` (default 40), `needs_review` for `score >= min_score - 15`, `rejected` below that. Record every score — this table is append-only, so re-scoring a company adds a new row rather than overwriting:
 
 ```bash
+REASON=${REASON//\'/\'\'}
 sqlite3 ./store/leadgen.db "INSERT INTO qualification_snapshots (company_id, run_id, score, decision, product_fit_json, reason)
   VALUES ($COMPANY_ID, '$RUN_ID', $SCORE, '$DECISION', '$PRODUCT_FIT_JSON', '$REASON');
   UPDATE companies SET qualification_state = '$DECISION', qualification_score = $SCORE,

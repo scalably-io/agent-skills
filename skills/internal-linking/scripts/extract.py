@@ -3,8 +3,9 @@
 # defined in ../SKILL.md.
 #
 # Expects on PATH: python3 3.9+, with `lxml` and `scrapling` installed
-# (`pip install lxml "scrapling[fetchers]"` — `scrapling install` once to
-# fetch its bundled browser). `--html-file`/`--md-file` runs need only lxml.
+# (`pip install lxml cssselect "scrapling[fetchers]"` — `scrapling install`
+# once to fetch its bundled browser). `--html-file`/`--md-file` runs need
+# only lxml and cssselect.
 # Env vars read: none.
 # Example invocation:
 #   python3 extract.py https://example.com/blog/post --stealth

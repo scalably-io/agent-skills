@@ -14,7 +14,7 @@ owns the loop bookkeeping so the model only does the part it's good at (matching
 
 Reads, for the current run dir:
   verify/<src>.json  -> {accepted:[...], rejected:[{...,reason}]}
-  qa/<src>.json      -> {verdicts:[{source,anchor,target,verdict,reason}], ...}
+  qa/<src>.json      -> {"results":[{source,anchor,target,verdict,reason}], ...}
   targets.json       -> [{url,...}] or [url,...]
   proposals/<src>.json (to know what was tried)
   .loop-state.json   -> {rounds:{src:N}}  (this script maintains it)

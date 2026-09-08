@@ -21,7 +21,7 @@ Built and maintained by [Scalably](https://scalably.io). License: MIT.
 claude --plugin-dir ~/path/agent-skills
 ```
 
-Points a single Claude Code session at this repo's plugins without touching your marketplace config.
+Points a single Claude Code session at this repo's plugins without touching your marketplace config. With `--plugin-dir`, skills load under the directory name rather than the marketplace plugin name — invoke them as `/agent-skills:<name>` (e.g. `/agent-skills:research`), not `/agent-ops:` or `/seo-ops:`.
 
 ## Codex
 
@@ -30,6 +30,8 @@ Codex doesn't read plugin marketplaces. Copy the skill folder(s) you want straig
 ```
 cp -R skills/research .agents/skills/
 ```
+
+Skills that link to sibling skills (`../<name>/SKILL.md`) expect those siblings to be alongside them — copy the whole `skills/` directory instead of a single folder to keep those links working.
 
 ## Any Agent Skills runtime
 

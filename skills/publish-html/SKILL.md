@@ -84,8 +84,10 @@ project root uncluttered when there are several deliverables in flight.
 python3 <skill dir>/scripts/qa_html.py ./projects/<slug>/<name>.html
 ```
 
-(`<skill dir>` is wherever this skill's files live in your setup — from
-inside the skill's own folder, just `python3 scripts/qa_html.py ...`.)
+(`<skill dir>` is wherever this skill's files live in your setup — after a
+plugin install, find it with `find ~/.claude/plugins -path
+'*/publish-html/SKILL.md'` and use its parent directory; from inside the
+skill's own folder, just `python3 scripts/qa_html.py ...`.)
 
 A bad publish is effectively permanent the moment someone opens the link —
 none of the three hosts below give you a true "undo the last few minutes"

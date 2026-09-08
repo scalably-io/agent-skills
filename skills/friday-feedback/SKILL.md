@@ -62,10 +62,10 @@ Opt-out check — if this exists, do nothing else this run:
 
 If `OPT_OUT`, stop immediately.
 
-Activity threshold — count this week's daily logs (Monday through Friday):
+Activity threshold — count daily logs written in the last 7 days (portable, no GNU/BSD `date` branching):
 
 ```bash
-ls ./memory/daily/$(date -d "last monday" +%Y-%m-%d 2>/dev/null || date +%Y-%m-*)*.md 2>/dev/null | wc -l
+find ./memory/daily -name '*.md' -mtime -7 | wc -l
 ```
 
 Read this week's daily logs. If fewer than 3 days of activity, skip — not enough to ask about. Stop.

@@ -44,15 +44,19 @@ Expected: no chat-facing output beyond a brief confirmation. The memory tree is 
 
 ## How to schedule this
 
-Claude Code scheduled task (interactive): run `/schedule` and describe the cadence, e.g. "every day at 23:30 run /agent-ops:dream". The task runs the skill in a fresh session.
+Claude Code scheduled task (interactive): run `/schedule` and describe the cadence, e.g. "every day at 02:00 run /agent-ops:dream". The task runs the skill in a fresh session.
 
 Cron, from any machine with Claude Code installed:
 
 ```bash
-30 23 * * * cd /path/to/project && claude -p "/agent-ops:dream" >> logs/dream.log 2>&1
+0 2 * * * cd /path/to/project && claude -p "/agent-ops:dream" >> logs/dream.log 2>&1
 ```
 
+Runs after `daily-log` (scheduled at 23:30) has written the day's file, so the nightly log it consolidates always exists.
+
 ## Procedure
+
+This skill is meant to run after `daily-log` has already written the day's file (see the cron stagger above: daily-log at 23:30, dream at 02:00) — it consolidates that file, it does not generate it.
 
 ### 1. Load the contract
 

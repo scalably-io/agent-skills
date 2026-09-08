@@ -48,7 +48,13 @@ Expected command sequence (the agent runs these; see Procedure for what each ste
 ```bash
 mkdir -p ./projects/internal-linking/example-20260908-0930/{extract,profiles,proposals,verify,qa}
 
-python3 scripts/il_candidates.py --domain example.com \
+cat > ./sources.txt <<'EOF'
+https://example.com/blog/backup-guide
+https://example.com/pricing
+https://example.com/blog/migration-checklist
+EOF
+
+python3 <skill dir>/scripts/il_candidates.py --domain example.com \
     --ledger ./memory/internal-linking-ledger.jsonl \
     --sources ./sources.txt \
     --max-targets 10 --max-sources 30 \
@@ -60,21 +66,21 @@ python3 scripts/il_candidates.py --domain example.com \
 #
 # Fuller option, with a Search Console service account — ranks BOTH targets and
 # sources from real click/impression data instead of sitemap-only + a manual list:
-#   python3 scripts/il_candidates.py --domain example.com --sa /path/to/sa.json \
+#   python3 <skill dir>/scripts/il_candidates.py --domain example.com --sa /path/to/sa.json \
 #       --ledger ./memory/internal-linking-ledger.jsonl \
 #       --max-targets 10 --max-sources 30 --inspect \
 #       --json ./projects/internal-linking/example-20260908-0930/profiles/candidates.json
 
-python3 scripts/extract.py https://example.com/blog/backup-guide \
+python3 <skill dir>/scripts/extract.py https://example.com/blog/backup-guide \
     > ./projects/internal-linking/example-20260908-0930/extract/backup-guide.json
-python3 scripts/extract.py https://example.com/pricing \
+python3 <skill dir>/scripts/extract.py https://example.com/pricing \
     > ./projects/internal-linking/example-20260908-0930/extract/pricing.json
 # (repeat once per chosen source and target URL)
 
 # agent matching step (no CLI — see Procedure step 4), one subagent per source,
 # writing ./projects/internal-linking/example-20260908-0930/proposals/<slug>.json
 
-python3 scripts/verify.py \
+python3 <skill dir>/scripts/verify.py \
     --extract ./projects/internal-linking/example-20260908-0930/extract/backup-guide.json \
     --proposals ./projects/internal-linking/example-20260908-0930/proposals/backup-guide.json \
     --targets ./projects/internal-linking/example-20260908-0930/targets.json \
@@ -85,11 +91,17 @@ python3 scripts/verify.py \
 # agent quality-gate step (no CLI — see Procedure step 6), writing
 # ./projects/internal-linking/example-20260908-0930/qa/<slug>.json
 
-python3 scripts/merge.py \
+python3 <skill dir>/scripts/merge.py \
     --verify-dir ./projects/internal-linking/example-20260908-0930/verify/ \
     --qa-dir ./projects/internal-linking/example-20260908-0930/qa/ \
     --out ./projects/internal-linking/example-20260908-0930/final-links.json
 ```
+
+(`<skill dir>` is wherever this skill's files live in your setup — after a
+plugin install, find it with `find ~/.claude/plugins -path
+'*/internal-linking/SKILL.md'` and use its parent directory; from inside
+the skill's own folder, drop the `<skill dir>/` prefix and just run
+`python3 scripts/il_candidates.py ...`.)
 
 Expected output: `final-links.json` (one record per validated, QA-passed link: `source`, `anchor`, `anchor_exact`, `target`, `sentence`, `why`, `anchor_reuse_count`) plus `final-links.json.audit.json`; then `./output/internal-linking-example-20260908-0930.csv` and appended lines in `./memory/internal-linking-ledger.jsonl`.
 

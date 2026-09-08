@@ -52,8 +52,13 @@ cat > ./memory/weekly-summary.md <<'EOF'
 (none yet)
 EOF
 touch ./memory/daily/2026-09-08.md
-bash scripts/check-memory.sh
+bash <skill dir>/scripts/check-memory.sh
 ```
+
+(`<skill dir>` is wherever this skill's files live in your setup — after a
+plugin install, find it with `find ~/.claude/plugins -path
+'*/memory-system/SKILL.md'` and use its parent directory; from inside the
+skill's own folder, just `bash scripts/check-memory.sh`.)
 
 Expected output: `OK` (exit code 0). Delete `./memory/index.md` and rerun to see the failure mode instead: `VIOLATION: index.md is missing — the dream has nothing to consolidate into`, exit code 1.
 
