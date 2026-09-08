@@ -12,7 +12,7 @@ metadata:
   not_for: [Simple lookups or quick questions answerable with 1-2 searches]
 ---
 
-# Research — Multi-Source Synthesis
+# Research: Multi-Source Synthesis
 
 ## What it does
 
@@ -64,15 +64,15 @@ sampling rules, and how to qualify community evidence.
 
 ### 2. Plan
 
-Design broad, multi-angle directions. Each subagent has its own context window — make directions meaty so each covers 2-3 related subtopics.
+Design broad, multi-angle directions. Each subagent has its own context window; make directions meaty so each covers 2-3 related subtopics.
 
-Good: "Customer perception & brand positioning — reviews from multiple sites, website messaging, pricing structure, CRO changes via Wayback Machine."
+Good: "Customer perception & brand positioning: reviews from multiple sites, website messaging, pricing structure, CRO changes via Wayback Machine."
 Bad: "Reviews analysis" (wastes an agent slot on a narrow angle)
 
 Quick: 3 directions. Deep: up to 5 directions. If the user specifies a number, use that instead.
 
 <plan_delivery>
-**Deep mode:** Reply to the user in chat with the plan below, then stop and wait for approval. The user will reply "go" or suggest changes. You have session context — the plan is remembered across messages.
+**Deep mode:** Reply to the user in chat with the plan below, then stop and wait for approval. The user will reply "go" or suggest changes. You have session context; the plan is remembered across messages.
 
 Plan format:
 ```
@@ -80,7 +80,7 @@ Research Plan: {topic}
 Mode: Deep | Domain: {domain} | Freshness: {freshness}
 
 Directions:
-1. {direction 1 — with scope description}
+1. {direction 1: with scope description}
 2. {direction 2}
 ...
 
@@ -98,7 +98,7 @@ Quick mode: skip approval, go directly to step 3.
 Run `date +%Y-%m-%d` for today's date.
 
 <resume_check>
-Deep mode only — check if a research folder exists for today:
+Deep mode only: check if a research folder exists for today:
 ```bash
 ls ./research/{slug}/raw/direction-*.md 2>/dev/null && wc -c ./research/{slug}/raw/direction-*.md
 ```
@@ -106,12 +106,12 @@ If files exist with >500 bytes, resume only missing directions. Tell the user ho
 </resume_check>
 
 <launch_workers>
-Step 1 — Create folder:
+Step 1: Create folder:
 ```bash
 mkdir -p ./research/{topic-slug-YYYYMMDD}/raw
 ```
 
-Step 2 — Launch all directions as parallel subagents in a SINGLE message. Each call runs concurrently with its own context window.
+Step 2: Launch all directions as parallel subagents in a SINGLE message. Each call runs concurrently with its own context window.
 
 For each direction, use the Agent tool (Claude Code) or equivalent Task/subagent primitive, with a general-purpose worker profile:
 
@@ -137,9 +137,9 @@ Output file: ./research/{slug}/raw/direction-N.md
 })
 ```
 
-**CRITICAL:** Launch ALL directions in a single message — do NOT wait for one to finish before launching the next. Parallel subagents run concurrently.
+**CRITICAL:** Launch ALL directions in a single message; do NOT wait for one to finish before launching the next. Parallel subagents run concurrently.
 
-Step 3 — Verify:
+Step 3: Verify:
 ```bash
 wc -c ./research/{slug}/raw/direction-*.md 2>/dev/null
 ```
@@ -158,7 +158,7 @@ Read all `raw/direction-N.md` files. Cross-reference findings:
 
 Write the report with [N] numbered inline citations. Include a bibliography at the end:
 ```
-[1] Title — URL (Tier, accessed YYYY-MM-DD)
+[1] Title - URL (Tier, accessed YYYY-MM-DD)
 ```
 
 Include a Limitations section noting gaps, failed directions, and unverifiable claims.
@@ -182,7 +182,7 @@ Reply to the user in chat with the final report.
 </delivery>
 
 <source_rules>
-Every factual claim needs a source URL. Qualify single-source claims ("According to..."). Present contradictions fairly. No Tier Never sources (Wikipedia as primary, content farms, Quora) — use Wikipedia to find the real source, then cite that.
+Every factual claim needs a source URL. Qualify single-source claims ("According to..."). Present contradictions fairly. No Tier Never sources (Wikipedia as primary, content farms, Quora); use Wikipedia to find the real source, then cite that.
 
 Read `references/source-tiers.md` for the full tier system.
 </source_rules>
@@ -197,7 +197,7 @@ Read `references/source-tiers.md` for the full tier system.
 </technical_rules>
 
 <deprecated_fallback>
-**Sequential CLI fallback (DEPRECATED)** — use only if parallel subagents stall or fail repeatedly.
+**Sequential CLI fallback (DEPRECATED)**: use only if parallel subagents stall or fail repeatedly.
 
 ```bash
 for i in 1 2 3 4 5; do

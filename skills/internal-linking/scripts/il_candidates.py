@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# il_candidates.py — deterministic TARGET/SOURCE candidate selector for the
+# il_candidates.py: deterministic TARGET/SOURCE candidate selector for the
 # internal-linking skill, defined in ../SKILL.md. This is the free,
 # no-API-key path: it needs no Ahrefs/DataForSEO account to produce a
 # usable campaign shortlist from Google Search Console + the sitemap alone.
@@ -7,34 +7,34 @@
 # Expects on PATH: python3 3.9+, stdlib only (urllib, gzip, xml.etree) plus
 # `google-auth` if you pass --sa (GSC access via a Google service account;
 # `pip install google-auth`). Without --sa (or with an unreadable file) the
-# script degrades automatically to sitemap-only candidate selection — no
+# script degrades automatically to sitemap-only candidate selection, no
 # error, just a smaller/less-ranked pool. Without --sa, SOURCE candidates
 # come back empty (source ranking needs GSC clicks/impressions, and there's
-# no sitemap-only fallback for that half) — pass --sources FILE (one URL
+# no sitemap-only fallback for that half); pass --sources FILE (one URL
 # per line, '#' comments allowed) to supply your own source list instead.
-# Env vars read: none — auth is by the --sa service-account JSON file.
+# Env vars read: none. Auth is by the --sa service-account JSON file.
 # Example invocation:
 #   python3 il_candidates.py --domain example.com --max-targets 15 \
 #       --max-sources 30 --json profiles/candidates.json
 #   # no-GSC-access path:
 #   python3 il_candidates.py --domain example.com --sources my-sources.txt \
 #       --json profiles/candidates.json
-"""il_candidates — deterministic TARGET/SOURCE candidate selection for an
+"""il_candidates: deterministic TARGET/SOURCE candidate selection for an
 internal-linking campaign. Agent-browser pattern: the CLI does all data
 gathering + ranking; the agent reads a COMPACT structured table and applies
 final SEO judgment. No MCP round-trips, no raw API blobs in the agent context.
 
-Data sources — GSC maximally, all of it FREE (no API units), read from a
+Data sources: GSC maximally, all of it FREE (no API units), read from a
 Google service account you provide (via --sa); the agent never sees a key:
-  - GSC page metrics (searchAnalytics, dim=[page]) — the performance universe:
+  - GSC page metrics (searchAnalytics, dim=[page]): the performance universe:
     clicks, impressions, CTR, position per page. PRIMARY selection signal.
-  - GSC page+query (searchAnalytics, dim=[page,query]) — the actual Google
+  - GSC page+query (searchAnalytics, dim=[page,query]): the actual Google
     queries each page ranks for = FREE per-page keyword profiles, more accurate
     than a paid keyword tool's estimates for the site's own pages. Feeds the
     matcher's profiles.
-  - Sitemap (robots.txt -> sitemap.xml, recursive, gzip-tolerant) — catches
+  - Sitemap (robots.txt -> sitemap.xml, recursive, gzip-tolerant): catches
     zero-traffic / brand-new pages GSC cannot see (no impressions yet).
-This script does not call Ahrefs or DataForSEO — see SKILL.md's Requirements
+This script does not call Ahrefs or DataForSEO; see SKILL.md's Requirements
 for the optional paid keyword-value-weighting step (via an MCP server), which
 runs separately and only on the shortlist this script produces.
 
@@ -47,11 +47,11 @@ Selection rules:
     high clicks desc, then impressions desc; EXCLUDE pages used as a source in
     the last LEDGER_WINDOW_DAYS (unless the site is small < SMALL_SITE).
     With --sources FILE instead: the given URLs are the source set, filtered
-    to the same domain and excluding chosen targets — no GSC ranking applied.
+    to the same domain and excluding chosen targets; no GSC ranking applied.
   A page is never both a target and a source in one run. Obvious junk URLs
   (/tag/ /category/ /wp- /cart /privacy /login ...) are pre-filtered.
 
-Caps are "up to" — never padded. Output is compact (top ~40 targets / ~50
+Caps are "up to", never padded. Output is compact (top ~40 targets / ~50
 sources) so even a 1000-page site stays context-safe.
 
 Usage:
@@ -65,7 +65,7 @@ import sys, os, json, argparse, gzip, re, time, urllib.request, urllib.parse, ur
 import warnings
 from pathlib import Path
 # Silence the harmless RequestsDependencyWarning (urllib3/chardet version mismatch
-# in any python3) — it's cosmetic but prints to stderr on every run and has made
+# in any python3); it's cosmetic but prints to stderr on every run and has made
 # the agent waste turns "investigating" it. Suppress so the run stays clean.
 warnings.filterwarnings("ignore")
 from xml.etree import ElementTree as ET
@@ -79,7 +79,7 @@ SMALL_SITE = 40         # below this many pages, allow source reuse
 JUNK = re.compile(r"/(tag|category|categories|author|page|wp-|cart|checkout|"
                   r"privacy|terms|login|signin|sign-in|register|account|search|"
                   r"feed|wp-json|cdn-cgi)(/|$|\?)", re.I)
-# Index/listing/hub pages — poor SOURCES (little body prose, mostly links/nav).
+# Index/listing/hub pages: poor SOURCES (little body prose, mostly links/nav).
 # A bare section root like /blog or /blog/ is a listing; exclude from sources.
 INDEXLIKE = re.compile(r"/(blog|articles?|posts?|news|resources?|category|categories"
                        r"|topics?|guides?)/?$", re.I)
@@ -222,7 +222,7 @@ def _inspect_one(url, site, tok, base):
 
 def gsc_inspect(urls, site, tok, budget=45):
     """URL Inspection (searchconsole.googleapis.com) on a BOUNDED set of candidate
-    URLs — returns {url: {coverage, verdict, referring_urls_count, indexed}}.
+    URLs, returns {url: {coverage, verdict, referring_urls_count, indexed}}.
     coverageState like 'Crawled - currently not indexed' / 'Discovered - currently
     not indexed' marks the highest-value internal-linking targets (links can push
     them into the index). referring_urls_count = how many internal links Google
@@ -232,7 +232,7 @@ def gsc_inspect(urls, site, tok, budget=45):
     WWW-CANONICAL RECOVERY: GSC may report page URLs in one host form (e.g. non-www,
     after _canon strips www) while Google indexed the OTHER form (www). Inspecting the
     wrong form returns the false-negative coverage 'URL is unknown to Google'. When we
-    see that, retry the www-toggled form and keep whichever Google actually knows — so
+    see that, retry the www-toggled form and keep whichever Google actually knows, so
     an indexed page is never mislabelled 'not-indexed' (which would wrongly float it to
     the top of the target ranking and print a false status into the output)."""
     if not (tok and urls):
@@ -258,7 +258,7 @@ def gsc_inspect(urls, site, tok, budget=45):
     return out
 
 def gsc_profiles(domain, tok, days, top_n=12):
-    """{url: [{q, clicks, impressions, position}]} — the top Google queries each
+    """{url: [{q, clicks, impressions, position}]}: the top Google queries each
     page ranks for, straight from GSC (FREE, no API units, the site's real data).
     One searchAnalytics call with dim=[page,query]. Returns {} on no access."""
     if not tok:
@@ -308,7 +308,7 @@ def _recent_ledger_sources(ledger_path, window_days):
 def _load_sources_file(path, domain):
     """--sources FILE: one URL per line, '#' starts a comment (inline or
     whole-line), blank lines ignored. Returns canonicalized, deduped URLs
-    restricted to the given domain (www-insensitive) — the caller still
+    restricted to the given domain (www-insensitive); the caller still
     excludes chosen targets on top of this."""
     dom = domain.lower()
     if dom.startswith("www."):
@@ -334,7 +334,7 @@ def main():
     ap.add_argument("--sources", help="path to a plain-text file of source URLs (one per line, "
                      "'#' starts a comment) to use as the SOURCE set instead of GSC-ranked "
                      "sources; still filtered to the same domain and to exclude chosen "
-                     "targets. Use this for the no-Search-Console-access path — without --sa, "
+                     "targets. Use this for the no-Search-Console-access path; without --sa, "
                      "source ranking needs GSC clicks/impressions and returns empty otherwise.")
     ap.add_argument("--ledger")
     ap.add_argument("--days", type=int, default=90)
@@ -348,8 +348,8 @@ def main():
     domain = a.domain.replace("https://", "").replace("http://", "").strip("/")
 
     tok = _gsc_token(a.sa)                          # one token, reused
-    gsc, site_url = gsc_pages(domain, tok, a.days)  # dim=[page] — metrics + resolved property
-    profiles = gsc_profiles(domain, tok, a.days)    # dim=[page,query] — FREE keyword profiles
+    gsc, site_url = gsc_pages(domain, tok, a.days)  # dim=[page]: metrics + resolved property
+    profiles = gsc_profiles(domain, tok, a.days)    # dim=[page,query]: FREE keyword profiles
     smap = sitemap_urls(domain)
     universe = set(gsc) | smap
     universe = {u for u in universe if not JUNK.search(u)}
@@ -376,7 +376,7 @@ def main():
     highimp.sort(key=lambda x: -(x["impressions"] or 0))
     target_pool = page2 + highimp + zero  # priority order
 
-    # attach the FREE GSC keyword profile (top queries) to each target candidate —
+    # attach the FREE GSC keyword profile (top queries) to each target candidate;
     # this IS the matcher's profile data; no per-target ahrefs call needed
     for t in target_pool:
         qs = profiles.get(t["url"], [])
@@ -385,7 +385,7 @@ def main():
     targets = target_pool[: max(a.max_targets * 2, 40)]  # compact pool for the agent
 
     # OPTIONAL: URL Inspection enrichment on the shortlist (rate-limited, slow).
-    # Flags unindexed / under-linked pages — the highest-value IL targets — and
+    # Flags unindexed / under-linked pages (the highest-value IL targets) and
     # re-ranks them to the front (a 'not indexed' page that internal links can
     # push into the index beats a merely-page-2 page).
     if a.inspect and site_url:
@@ -410,13 +410,13 @@ def main():
     # ---- source candidates ----
     if a.sources:
         # No-GSC-access path: the caller supplies the source set directly.
-        # Still apply the script's own filters — same domain, not a chosen
-        # target — but skip the GSC ranking/exclusion logic below (there's
+        # Still apply the script's own filters (same domain, not a chosen
+        # target) but skip the GSC ranking/exclusion logic below (there's
         # no click/impression data to rank by).
         src = [{"url": u, **{k: None for k in ("clicks", "impressions", "ctr", "position")}}
                for u in _load_sources_file(a.sources, domain) if u not in chosen_target_urls]
     else:
-        # A source must be a real content page with body prose to host links — NOT
+        # A source must be a real content page with body prose to host links, NOT
         # the homepage or a section/index listing (those are hubs: little prose, mostly
         # nav, yield 0-1 body links and waste a slot). Exclude them from sources too.
         src = []
@@ -458,13 +458,13 @@ def main():
           f"gsc_access={s['gsc_access']} profiles={s['profiles']} "
           f"small_site={s['small_site']} excluded_recent_sources={s['recent_excluded_sources']}")
     cov_hdr = " | coverage | reflinks" if a.inspect else ""
-    print(f"\n## TARGET candidates (pick up to {a.max_targets}) — url | bucket | pos | impr | clk{cov_hdr} | top_queries")
+    print(f"\n## TARGET candidates (pick up to {a.max_targets}): url | bucket | pos | impr | clk{cov_hdr} | top_queries")
     for t in targets:
         tq = ", ".join(t.get("top_queries", [])[:4])
         cov = (f"\t{t.get('coverage','?')}\t{t.get('referring_urls_count','?')}"
                if a.inspect else "")
         print(f"{t['url']}\t{t['bucket']}\t{t['position']}\t{t['impressions']}\t{t['clicks']}{cov}\t{tq}")
-    print(f"\n## SOURCE candidates (pick up to {a.max_sources}) — url | clk | impr | pos")
+    print(f"\n## SOURCE candidates (pick up to {a.max_sources}): url | clk | impr | pos")
     for x in sources:
         print(f"{x['url']}\t{x['clicks']}\t{x['impressions']}\t{x['position']}")
 

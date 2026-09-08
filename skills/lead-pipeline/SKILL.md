@@ -10,9 +10,9 @@ metadata:
     date: "2026-09-08"
   triggers: [run lead pipeline, lead pipeline, generate leads, find prospects, build a lead list, lead gen pipeline, prospect pipeline, outreach pipeline, lead pipeline status, lead pipeline resume]
   not_for:
-    - "Running one stage standalone for debugging — this skill is the whole orchestrated pipeline; use the individual Procedure steps directly if you only need one"
-    - "You already have a domain list and just need contact emails — use batch-contact-email directly, skip discovery and scoring"
-    - "Filtering an existing domain list by vertical without generating a new one — use classify"
+    - "Running one stage standalone for debugging: this skill is the whole orchestrated pipeline; use the individual Procedure steps directly if you only need one"
+    - "You already have a domain list and just need contact emails: use batch-contact-email directly, skip discovery and scoring"
+    - "Filtering an existing domain list by vertical without generating a new one: use classify"
 ---
 
 # Lead Pipeline
@@ -26,15 +26,15 @@ Orchestrates a full outbound lead-generation run in one session: discover candid
 - Web search and fetch tools for company discovery. Free option: Claude Code's built-in WebSearch/WebFetch.
 - Subagents for parallelizing discovery or scoring across a large target count (optional). Free option: Claude Code's Agent tool; without it, run every stage sequentially inline.
 - `sqlite3` CLI (ships with macOS and most Linux distros) or Python's built-in `sqlite3` module, for the local state database.
-- Prospect enrichment: Snov.io or Hunter.io API. Free option: skip enrichment, keep discovery and scoring. Contact discovery for each qualified company is delegated to the [batch-contact-email](../batch-contact-email/SKILL.md) skill (same plugin) — it already implements this scrape-first, API-fallback logic, so this pipeline reuses it rather than duplicating it. Neither vendor has a free tier that includes API access: Hunter.io's free plan gives 50 credits/month for Email Finder, Email Verifier, and Domain Search — verified 2026-09-08 from Hunter's pricing page ("50 credits per month", "Used for Email Finder, Email Verifier, and Domain Search"); Snov.io's free Trial explicitly excludes it — verified 2026-09-08 from Snov.io's pricing page ("Premium features like ... API & webhooks access and export are not available in Trial").
-- Outreach delivery (optional): any ESP with an API (Snov.io campaigns, Instantly, Lemlist) to push contacts directly, or none at all — the CSV output is a complete, importable deliverable on its own.
+- Prospect enrichment: Snov.io or Hunter.io API. Free option: skip enrichment, keep discovery and scoring. Contact discovery for each qualified company is delegated to the [batch-contact-email](../batch-contact-email/SKILL.md) skill (same plugin); it already implements this scrape-first, API-fallback logic, so this pipeline reuses it rather than duplicating it. Neither vendor has a free tier that includes API access: Hunter.io's free plan gives 50 credits/month for Email Finder, Email Verifier, and Domain Search; verified 2026-09-08 from Hunter's pricing page ("50 credits per month", "Used for Email Finder, Email Verifier, and Domain Search"); Snov.io's free Trial explicitly excludes it; verified 2026-09-08 from Snov.io's pricing page ("Premium features like ... API & webhooks access and export are not available in Trial").
+- Outreach delivery (optional): any ESP with an API (Snov.io campaigns, Instantly, Lemlist) to push contacts directly, or none at all; the CSV output is a complete, importable deliverable on its own.
 
 ## Inputs and outputs
 
 | | |
 |---|---|
-| Input | A vertical, a region, a target prospect count, and a pitch angle (what you're offering and why it matters to that vertical) — plus an optional subcommand: `run` (default), `test`, `status [--run-id R]`, or `resume --run-id R` |
-| Output | `./store/leadgen.db` (SQLite state — every company, contact, score, and campaign membership) and `./output/leads-<YYYYMMDD>.csv` (one row per qualified, enriched, personalized prospect) |
+| Input | A vertical, a region, a target prospect count, and a pitch angle (what you're offering and why it matters to that vertical), plus an optional subcommand: `run` (default), `test`, `status [--run-id R]`, or `resume --run-id R` |
+| Output | `./store/leadgen.db` (SQLite state: every company, contact, score, and campaign membership) and `./output/leads-<YYYYMMDD>.csv` (one row per qualified, enriched, personalized prospect) |
 
 ## Worked example
 
@@ -51,7 +51,7 @@ Expected: `./store/leadgen.db` is created (or updated) with a new `pipeline_runs
 <schema>
 This is a documented subset of the production schema; columns whose producers are not part of this skill are omitted.
 
-The pipeline's state lives in `./store/leadgen.db`. Initialize it once per project — this is idempotent, safe to re-run:
+The pipeline's state lives in `./store/leadgen.db`. Initialize it once per project; this is idempotent, safe to re-run:
 
 ```bash
 mkdir -p ./store ./output
@@ -175,11 +175,11 @@ CREATE INDEX IF NOT EXISTS idx_pipeline_runs_status ON pipeline_runs(status, sta
 SQL
 ```
 
-State model: `companies` -> `discovery_signals` (why it was found) -> `qualification_snapshots` (score history, append-only) -> `contacts` (enriched) -> `campaign_memberships` (per-campaign outreach state) -> `replies`. State columns to watch: `companies.qualification_state`, `companies.contact_state`, `campaign_memberships.{personalization_state,sync_state,engagement_state}`. Every write goes through `sqlite3`/the pipeline steps below — never hand-edit a row outside a documented step, or later stages will disagree with what actually happened.
+State model: `companies` -> `discovery_signals` (why it was found) -> `qualification_snapshots` (score history, append-only) -> `contacts` (enriched) -> `campaign_memberships` (per-campaign outreach state) -> `replies`. State columns to watch: `companies.qualification_state`, `companies.contact_state`, `campaign_memberships.{personalization_state,sync_state,engagement_state}`. Every write goes through `sqlite3`/the pipeline steps below; never hand-edit a row outside a documented step, or later stages will disagree with what actually happened.
 
-Every `Gate:` below that stops the run also closes out `pipeline_runs` rather than leaving it stuck at `status = 'running'` — before telling the user and stopping, run:
+Every `Gate:` below that stops the run also closes out `pipeline_runs` rather than leaving it stuck at `status = 'running'`; before telling the user and stopping, run:
 
-Free-text values interpolated into a single-quoted SQL string (`$NAME`, `$REASON`, `$VERTICAL` — a company name, an error/decision reason, or a caller-supplied vertical can contain an apostrophe) must be escaped first: `REASON=${REASON//\'/\'\'}` — double every single quote — applied the same way wherever these three are used below.
+Free-text values interpolated into a single-quoted SQL string (`$NAME`, `$REASON`, `$VERTICAL`: a company name, an error/decision reason, or a caller-supplied vertical can contain an apostrophe) must be escaped first: `REASON=${REASON//\'/\'\'}` (double every single quote), applied the same way wherever these three are used below.
 
 ```bash
 REASON=${REASON//\'/\'\'}
@@ -201,13 +201,13 @@ sqlite3 ./store/leadgen.db "INSERT INTO pipeline_runs (id, trigger_type, status,
 
 ### 2. Preflight
 
-Before spending any tokens or API credits, confirm the tools you actually need are available: web search/fetch, and — only if you plan to use them — `SNOV_API_KEY`/`SNOV_CLIENT_SECRET` or `HUNTER_API_KEY` for enrichment. Missing enrichment credentials are not a blocker (see Requirements — enrichment degrades to the free scrape-first path), but tell the user up front which capabilities are active for this run rather than discovering it mid-pipeline.
+Before spending any tokens or API credits, confirm the tools you actually need are available: web search/fetch, and (only if you plan to use them) `SNOV_API_KEY`/`SNOV_CLIENT_SECRET` or `HUNTER_API_KEY` for enrichment. Missing enrichment credentials are not a blocker (see Requirements; enrichment degrades to the free scrape-first path), but tell the user up front which capabilities are active for this run rather than discovering it mid-pipeline.
 
 ### 3. Discover
 
-Default source — **vertical + region search**: run several web searches varying the phrasing (`"<vertical>" <region>`, `<vertical> near <region>`, local directory/listing sites for that vertical) until you have at least `target * 2` distinct candidate domains — the extra headroom absorbs the qualify/enrich drop-off in later stages. For each result, extract `company_name`, `canonical_domain` (strip to registrable domain), `website_url`, and the search result's own snippet/description text.
+Default source: **vertical + region search**: run several web searches varying the phrasing (`"<vertical>" <region>`, `<vertical> near <region>`, local directory/listing sites for that vertical) until you have at least `target * 2` distinct candidate domains; the extra headroom absorbs the qualify/enrich drop-off in later stages. For each result, extract `company_name`, `canonical_domain` (strip to registrable domain), `website_url`, and the search result's own snippet/description text.
 
-Alternate source — **hiring/gig signal search** (use when the vertical is defined by a need rather than an industry, e.g. "companies that need overflow bookkeeping help"): search job boards and freelance marketplaces (Upwork, LinkedIn Jobs) for postings that signal the pain point your pitch angle solves. This finds companies with active, timely intent, at the cost of a narrower pool.
+Alternate source: **hiring/gig signal search** (use when the vertical is defined by a need rather than an industry, e.g. "companies that need overflow bookkeeping help"): search job boards and freelance marketplaces (Upwork, LinkedIn Jobs) for postings that signal the pain point your pitch angle solves. This finds companies with active, timely intent, at the cost of a narrower pool.
 
 Insert each candidate, relying on the `UNIQUE(canonical_domain)` constraint to silently skip repeats across runs:
 
@@ -222,20 +222,20 @@ sqlite3 ./store/leadgen.db "INSERT OR IGNORE INTO companies (company_name, canon
   ON CONFLICT(source_key) DO NOTHING;"
 ```
 
-If the target count is large (50+), dispatch the search across several parallel subagents (one per search variant or sub-region) rather than working through queries one at a time — one message launching all of them, matching the pattern in [research](../research/SKILL.md#3-retrieve). Each subagent writes its findings to a scratch file; merge before inserting.
+If the target count is large (50+), dispatch the search across several parallel subagents (one per search variant or sub-region) rather than working through queries one at a time; one message launching all of them, matching the pattern in [research](../research/SKILL.md#3-retrieve). Each subagent writes its findings to a scratch file; merge before inserting.
 
-Gate: if discovery found zero candidates after trying every source above, tell the user and stop — do not proceed to qualify an empty set.
+Gate: if discovery found zero candidates after trying every source above, tell the user and stop; do not proceed to qualify an empty set.
 
 ### 4. Qualify
 
 Score every `pending` company 0-100 against this rubric, using the actual site content (fetch the homepage, not just the search snippet):
 
-- **Vertical/ICP fit (0-40)** — does the business genuinely match the target vertical and region, and look like a plausible buyer for the pitch angle?
-- **Signal strength (0-25)** — a hiring/gig posting that directly names the pain point scores highest; a generic directory listing with no explicit signal scores lowest, but is not disqualifying on its own.
-- **Reachability (0-15)** — a live site plus a plausible path to a named contact (team page, LinkedIn, visible email).
-- **Business viability (0-20)** — active site (not parked/dead), a size that plausibly matches who you can sell to (not a solo freelancer if you're pitching a team tool, not an enterprise if you're pitching an SMB price point).
+- **Vertical/ICP fit (0-40)**: does the business genuinely match the target vertical and region, and look like a plausible buyer for the pitch angle?
+- **Signal strength (0-25)**: a hiring/gig posting that directly names the pain point scores highest; a generic directory listing with no explicit signal scores lowest, but is not disqualifying on its own.
+- **Reachability (0-15)**: a live site plus a plausible path to a named contact (team page, LinkedIn, visible email).
+- **Business viability (0-20)**: active site (not parked/dead), a size that plausibly matches who you can sell to (not a solo freelancer if you're pitching a team tool, not an enterprise if you're pitching an SMB price point).
 
-Decision: `qualified` at `score >= min_score` (default 40), `needs_review` for `score >= min_score - 15`, `rejected` below that. Record every score — this table is append-only, so re-scoring a company adds a new row rather than overwriting:
+Decision: `qualified` at `score >= min_score` (default 40), `needs_review` for `score >= min_score - 15`, `rejected` below that. Record every score; this table is append-only, so re-scoring a company adds a new row rather than overwriting:
 
 ```bash
 REASON=${REASON//\'/\'\'}
@@ -245,11 +245,11 @@ sqlite3 ./store/leadgen.db "INSERT INTO qualification_snapshots (company_id, run
     qualification_reason = '$REASON', last_qualified_at = datetime('now') WHERE id = $COMPANY_ID;"
 ```
 
-Gate: if zero companies reach `qualified`, tell the user and stop — do not enrich or personalize an empty set. `needs_review` companies are reported to the user but not carried forward automatically.
+Gate: if zero companies reach `qualified`, tell the user and stop; do not enrich or personalize an empty set. `needs_review` companies are reported to the user but not carried forward automatically.
 
 ### 5. Enrich
 
-For every `qualified` company with `contact_state = 'pending'`, find a contact using the [batch-contact-email](../batch-contact-email/SKILL.md) skill against that company's domain — it already runs the scrape-first, API-fallback waterfall (see its Requirements for the Hunter.io/Snov.io details). Take its highest-confidence result per domain.
+For every `qualified` company with `contact_state = 'pending'`, find a contact using the [batch-contact-email](../batch-contact-email/SKILL.md) skill against that company's domain; it already runs the scrape-first, API-fallback waterfall (see its Requirements for the Hunter.io/Snov.io details). Take its highest-confidence result per domain.
 
 ```bash
 sqlite3 ./store/leadgen.db "INSERT INTO contacts (company_id, email, email_normalized, email_source, verification_status, is_primary, enriched_at)
@@ -257,7 +257,7 @@ sqlite3 ./store/leadgen.db "INSERT INTO contacts (company_id, email, email_norma
   UPDATE companies SET contact_state = 'enriched', last_enriched_at = datetime('now') WHERE id = $COMPANY_ID;"
 ```
 
-A company with no email found gets `contact_state = 'no_contacts'` and drops out of this run — never invent a plausible-looking email.
+A company with no email found gets `contact_state = 'no_contacts'` and drops out of this run; never invent a plausible-looking email.
 
 Gate: if zero companies come out enriched, tell the user and stop.
 
@@ -270,11 +270,11 @@ sqlite3 ./store/leadgen.db "INSERT INTO campaign_memberships (company_id, contac
   VALUES ($COMPANY_ID, $CONTACT_ID, '$CAMPAIGN_KEY', '$PITCH_ANGLE', '$SUBJECT', '$INTRO', '$VALUE_PROP', '$CTA', 'generated');"
 ```
 
-Gate: if zero personalizations succeed, tell the user and stop — do not write an empty output file.
+Gate: if zero personalizations succeed, tell the user and stop; do not write an empty output file.
 
 ### 7. Deliver
 
-Write the CSV — this is the deliverable even if no ESP is configured:
+Write the CSV: this is the deliverable even if no ESP is configured:
 
 ```bash
 sqlite3 -header -csv ./store/leadgen.db "SELECT c.company_name AS company, c.website_url AS website,
@@ -287,7 +287,7 @@ sqlite3 -header -csv ./store/leadgen.db "SELECT c.company_name AS company, c.web
   > ./output/leads-$(date +%Y%m%d).csv
 ```
 
-Optional — push directly into an ESP: if the caller has Snov.io (or another ESP) API credentials configured, sync each row into a campaign there instead of, or in addition to, the CSV. On success, record the ESP's own campaign/list id and the sync time: `sqlite3 ./store/leadgen.db "UPDATE campaign_memberships SET sync_state = 'synced', external_campaign_id = '$ESP_CAMPAIGN_ID', synced_at = datetime('now') WHERE id = $MEMBERSHIP_ID;"`. If a sync fails, keep the row in the CSV so nothing is silently dropped, and record why: `sqlite3 ./store/leadgen.db "UPDATE campaign_memberships SET sync_state = 'failed', sync_error = '$ERROR_MESSAGE' WHERE id = $MEMBERSHIP_ID;"`. Stop the sync and report a partial result if the failure ratio across the batch exceeds 5%.
+**Optional: push directly into an ESP.** If the caller has Snov.io (or another ESP) API credentials configured, sync each row into a campaign there instead of, or in addition to, the CSV. On success, record the ESP's own campaign/list id and the sync time: `sqlite3 ./store/leadgen.db "UPDATE campaign_memberships SET sync_state = 'synced', external_campaign_id = '$ESP_CAMPAIGN_ID', synced_at = datetime('now') WHERE id = $MEMBERSHIP_ID;"`. If a sync fails, keep the row in the CSV so nothing is silently dropped, and record why: `sqlite3 ./store/leadgen.db "UPDATE campaign_memberships SET sync_state = 'failed', sync_error = '$ERROR_MESSAGE' WHERE id = $MEMBERSHIP_ID;"`. Stop the sync and report a partial result if the failure ratio across the batch exceeds 5%.
 
 Mark the run complete:
 
@@ -299,7 +299,7 @@ Report to the user in chat: run id, counts at each stage (discovered / qualified
 
 ### 8. Replies (optional, separate invocation)
 
-Run this on its own — typically on a schedule, separate from a fresh discovery run — for an existing `campaign_key`. If your outreach channel delivers replies to an inbox you can read (IMAP, an ESP's reply-export endpoint, or forwarded/pasted text), read new messages since the last check, classify each with Claude (`interested` / `not_interested` / `objection` / `ooo` / `bounce` / `unsubscribe`, plus a one-line follow-up action), insert into `replies`, and update `campaign_memberships.engagement_state` to `replied` for anything classified `interested`. Zero new replies is a normal, successful outcome, not an error.
+Run this on its own (typically on a schedule, separate from a fresh discovery run) for an existing `campaign_key`. If your outreach channel delivers replies to an inbox you can read (IMAP, an ESP's reply-export endpoint, or forwarded/pasted text), read new messages since the last check, classify each with Claude (`interested` / `not_interested` / `objection` / `ooo` / `bounce` / `unsubscribe`, plus a one-line follow-up action), insert into `replies`, and update `campaign_memberships.engagement_state` to `replied` for anything classified `interested`. Zero new replies is a normal, successful outcome, not an error.
 
 ```bash
 sqlite3 ./store/leadgen.db "INSERT INTO replies (membership_id, provider, provider_reply_id, reply_text, classification, sentiment, follow_up_action, replied_at, classified_at)
@@ -307,7 +307,7 @@ sqlite3 ./store/leadgen.db "INSERT INTO replies (membership_id, provider, provid
   UPDATE campaign_memberships SET engagement_state = 'replied', last_reply_at = datetime('now') WHERE id = $MEMBERSHIP_ID;"
 ```
 
-For every reply classified `interested`, reply to the user in chat immediately with the company, contact, campaign, a short snippet of the reply, and the suggested follow-up action — don't wait for a batch summary.
+For every reply classified `interested`, reply to the user in chat immediately with the company, contact, campaign, a short snippet of the reply, and the suggested follow-up action; don't wait for a batch summary.
 
 <resume_and_status>
 **Status** (no side effects):
@@ -316,10 +316,10 @@ sqlite3 -header -column ./store/leadgen.db "SELECT id, status, started_at, finis
 sqlite3 -header -column ./store/leadgen.db "SELECT qualification_state, COUNT(*) FROM companies GROUP BY 1;"
 ```
 
-**Resume** — a `resume --run-id R` request: read `checkpoint_json` and `status` from `pipeline_runs`, find the stage that has the fewest completed rows relative to the ones before it (e.g. companies `qualified` but none `enriched`), and continue from there rather than re-running earlier stages. A run already `completed` should not be resumed — tell the operator it's done. A run `aborted` should only be resumed on an explicit request.
+**Resume**: a `resume --run-id R` request: read `checkpoint_json` and `status` from `pipeline_runs`, find the stage that has the fewest completed rows relative to the ones before it (e.g. companies `qualified` but none `enriched`), and continue from there rather than re-running earlier stages. A run already `completed` should not be resumed; tell the operator it's done. A run `aborted` should only be resumed on an explicit request.
 </resume_and_status>
 
-Run this daily via cron for ongoing discovery, and separately every few hours for reply handling — for example:
+Run this daily via cron for ongoing discovery, and separately every few hours for reply handling, for example:
 ```
 0 7 * * * cd /path/to/project && claude -p "/seo-ops:lead-pipeline" >> logs/lead-pipeline.log 2>&1
 ```

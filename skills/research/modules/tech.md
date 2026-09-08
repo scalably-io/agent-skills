@@ -1,13 +1,13 @@
-# Tech Domain — Search Strategy
+# Tech Domain: Search Strategy
 
 ## Where to Search
 
 Priority order:
-1. **Official documentation** — product docs, API references, release notes, changelogs
-2. **GitHub** — repositories, issues, discussions, READMEs, benchmarks
-3. **RFCs and standards** — IETF, W3C, ECMA, IEEE specifications
-4. **Conference talks and papers** — recorded presentations, published proceedings
-5. **Tech publications** — Ars Technica, The Verge, InfoQ, The New Stack, Hacker News (as signal, not source)
+1. **Official documentation**: product docs, API references, release notes, changelogs
+2. **GitHub**: repositories, issues, discussions, READMEs, benchmarks
+3. **RFCs and standards**: IETF, W3C, ECMA, IEEE specifications
+4. **Conference talks and papers**: recorded presentations, published proceedings
+5. **Tech publications**: Ars Technica, The Verge, InfoQ, The New Stack, Hacker News (as signal, not source)
 
 ## Search Query Patterns
 
@@ -21,7 +21,7 @@ Priority order:
 "{technology} migration guide"
 ```
 
-## Source Evaluation — Tech Specific
+## Source Evaluation: Tech Specific
 
 **Strongest signals:**
 - Official release announcements from the project maintainers
@@ -43,7 +43,7 @@ Priority order:
 
 ## Freshness
 
-Tech moves fast. Default to sources from the last 6 months. For established technologies (Linux kernel, PostgreSQL, TCP/IP), older sources are acceptable if they cover stable, unchanging behavior. For new tools, frameworks, or APIs — insist on current-year sources.
+Tech moves fast. Default to sources from the last 6 months. For established technologies (Linux kernel, PostgreSQL, TCP/IP), older sources are acceptable if they cover stable, unchanging behavior. For new tools, frameworks, or APIs, insist on current-year sources.
 
 ## Output Notes
 

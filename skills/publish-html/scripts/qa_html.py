@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# qa_html.py — pre-publish QA gate for HTML deliverables, part of the
+# qa_html.py: pre-publish QA gate for HTML deliverables, part of the
 # publish-html skill defined in ../SKILL.md.
 #
 # Expects on PATH: python3 3.10+, with the `playwright` package installed
@@ -18,7 +18,7 @@
 # Example invocation:
 #   python3 scripts/qa_html.py ./projects/brief/brief.html --strict
 """
-qa_html.py — Pre-publish QA gate for HTML deliverables.
+qa_html.py: Pre-publish QA gate for HTML deliverables.
 
 Catches the failure modes that have shipped broken HTML to real audiences:
   - unfilled template placeholders
@@ -67,7 +67,7 @@ SCRIPT_VERSION = "1.0.0"
 
 
 def _default_allowed_prefixes() -> list[str]:
-    """No fixed project layout in the public build — the default allowlist
+    """No fixed project layout in the public build; the default allowlist
     is the current working directory (wherever you invoke this from) plus
     /tmp for legitimate scratch files. Set QA_ALLOWED_PATH_PREFIXES to
     override entirely for a different layout (e.g. a monorepo where the
@@ -195,7 +195,7 @@ VIEWPORTS = [
 # Brand fingerprints. When a brand is requested via --brand, the file MUST
 # contain at least one fingerprint from each axis (font + color token) or
 # the gate fails. This catches "the agent freelanced HTML instead of using
-# the brand's template" — a real failure mode where a required design
+# the brand's template", a real failure mode where a required design
 # system gets silently ignored and the output looks like a different
 # product. `example-brand` below is a placeholder showing the pattern;
 # replace it with your own brand's actual fonts/tokens (see the `report`
@@ -237,7 +237,7 @@ def _sha256_of(path: Path) -> str:
 
 def _scan_static_html(html: str, result: QAResult, brand: str | None = None) -> None:
     """Cheap regex/string checks that don't need a browser."""
-    # Hard placeholder markers — whoever copied the template and didn't
+    # Hard placeholder markers: whoever copied the template and didn't
     # remove these is shipping skeleton text.
     marker_hits = PLACEHOLDER_MARKER_RE.findall(html)
     if marker_hits:
@@ -249,7 +249,7 @@ def _scan_static_html(html: str, result: QAResult, brand: str | None = None) -> 
         if anonymous:
             bits.append(f"unnamed: {anonymous}")
         result.hard_fails.append(
-            "TEMPLATE_PLACEHOLDER markers leaked — the template was copied but the "
+            "TEMPLATE_PLACEHOLDER markers leaked: the template was copied but the "
             "markers weren't removed after filling it in. " + "; ".join(bits)
         )
 
@@ -275,21 +275,21 @@ def _scan_static_html(html: str, result: QAResult, brand: str | None = None) -> 
             "possible unfilled placeholders (could be real content): "
             + ", ".join(repr(s) for s in soft_leaked[:8])
             + ("…" if len(soft_leaked) > 8 else "")
-            + " — verify each value is intentional"
+            + " (verify each value is intentional)"
         )
 
     if brand:
         spec = BRANDS.get(brand)
         if not spec:
             result.warnings.append(
-                f"unknown brand '{brand}' — known brands: {list(BRANDS)}"
+                f"unknown brand '{brand}'. Known brands: {list(BRANDS)}"
             )
         else:
             font_hits = [f for f in spec["fonts"] if f in html]
             color_hits = [c for c in spec["color_tokens"] if c in html]
             if not font_hits or not color_hits:
                 result.hard_fails.append(
-                    f"brand '{brand}' fingerprint missing — file does not look like a "
+                    f"brand '{brand}' fingerprint missing: file does not look like a "
                     f"{brand} deliverable. Found fonts: {font_hits or 'NONE'}, "
                     f"color tokens: {color_hits or 'NONE'}. "
                     f"Required: at least one font from {spec['fonts']} AND at least one "
@@ -305,13 +305,13 @@ def _scan_static_html(html: str, result: QAResult, brand: str | None = None) -> 
     result.metrics["visible_chars"] = len(visible)
     if len(visible) < 200:
         result.hard_fails.append(
-            f"visible text too short ({len(visible)} chars) — page is empty or skeleton-only"
+            f"visible text too short ({len(visible)} chars): page is empty or skeleton-only"
         )
 
-    # Sanity — file has no <body> contents
+    # Sanity: file has no <body> contents
     body_match = re.search(r"<body[^>]*>(.*?)</body>", html, re.DOTALL | re.IGNORECASE)
     if not body_match or len(body_match.group(1).strip()) < 50:
-        result.hard_fails.append("<body> is empty or missing — file likely incomplete")
+        result.hard_fails.append("<body> is empty or missing: file likely incomplete")
 
 
 def _check_overflow(page: Any, vp: dict[str, Any], result: QAResult) -> None:
@@ -390,7 +390,7 @@ def _check_empty_sections(page: Any, vp: dict[str, Any], result: QAResult) -> No
     if empties:
         for s in empties:
             result.hard_fails.append(
-                f"empty section #{s['i']} ({s['id']}): only {len(s['text'])} chars — "
+                f"empty section #{s['i']} ({s['id']}): only {len(s['text'])} chars, "
                 f"skeleton not filled. Content: {s['text']!r}"
             )
 
@@ -410,7 +410,7 @@ def _check_stat_dupes(page: Any, vp: dict[str, Any], result: QAResult) -> None:
         if len(unique) == 1:
             result.warnings.append(
                 f"all {len(stats)} .stat-value elements show the same value {stats[0]!r} "
-                "— likely copy-paste, fill each stat individually"
+                "(likely copy-paste, fill each stat individually)"
             )
 
 
@@ -437,7 +437,7 @@ def _check_table_overflow(page: Any, vp: dict[str, Any], result: QAResult) -> No
         is_stack = "table-stack" in t["cls"]
         if t["cols"] >= 4 and not is_stack:
             result.warnings.append(
-                f"table #{t['i']} has {t['cols']} columns and no .table-stack class — "
+                f"table #{t['i']} has {t['cols']} columns and no .table-stack class, "
                 "dense tables get cramped on mobile. Add class=\"table-stack\" "
                 "and data-label attrs on each <td>."
             )
@@ -468,7 +468,7 @@ def _check_table_stack_labels(page: Any, vp: dict[str, Any], result: QAResult) -
     for t in bad:
         result.hard_fails.append(
             f"table.table-stack #{t['i']} has {t['totalMissing']} body cell(s) "
-            f"without data-label — mobile layout will break (no label shown). "
+            f"without data-label: mobile layout will break (no label shown). "
             f"Sample: {t['missing']}"
         )
 
@@ -512,7 +512,7 @@ def qa_html(
 ) -> QAResult:
     result = QAResult(file=str(html_path))
 
-    # Path confinement — an untrusted path argument is rejected up front:
+    # Path confinement: an untrusted path argument is rejected up front:
     # symlink escapes, paths outside the allowlist, and the wrong extension
     # are all caught before the file is ever opened.
     try:
@@ -547,7 +547,7 @@ def qa_html(
     try:
         from playwright.sync_api import sync_playwright
     except ImportError as e:
-        msg = f"playwright not installed — browser-rendered checks unavailable: {e}"
+        msg = f"playwright not installed: browser-rendered checks unavailable: {e}"
         if allow_static_only:
             result.warnings.append(msg + " (static-only mode)")
             if result.hard_fails:
@@ -561,7 +561,7 @@ def qa_html(
         return result
 
     # Use Playwright's OWN bundled Chromium (version-locked to the installed
-    # Playwright release) — executable_path=None makes Playwright resolve
+    # Playwright release); executable_path=None makes Playwright resolve
     # its bundled build. A manually pinned system Chromium can drift out of
     # version lockstep with Playwright's CDP handshake and fail to launch,
     # so this only honors PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH when it
@@ -580,7 +580,7 @@ def qa_html(
         except Exception as e:
             msg = f"could not launch chromium: {e}"
             if allow_static_only:
-                result.warnings.append(msg + " — static-only mode")
+                result.warnings.append(msg + " (static-only mode)")
                 if result.hard_fails:
                     result.status = "FAIL"
                 return result
@@ -652,7 +652,7 @@ def main() -> int:
         "--allow-static-only",
         action="store_true",
         help="If set, missing Chromium/Playwright produces warnings instead of "
-        "hard fails. Default OFF — a real QA run needs a browser.",
+        "hard fails. Default OFF; a real QA run needs a browser.",
     )
     args = parser.parse_args()
 

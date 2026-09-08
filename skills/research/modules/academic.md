@@ -1,15 +1,15 @@
-# Academic Domain — Search Strategy
+# Academic Domain: Search Strategy
 
 ## Where to Search
 
 Priority order:
-1. **Google Scholar** — broadest academic search, citation counts visible
-2. **arXiv** — preprints in CS, physics, math, quantitative biology, statistics
-3. **PubMed / PMC** — biomedical and life sciences, peer-reviewed
-4. **Semantic Scholar** — AI-powered academic search with citation context
-5. **SSRN** — social sciences, economics, law preprints
-6. **Institutional repositories** — university publication databases
-7. **Conference proceedings** — ACM DL, IEEE Xplore, NeurIPS, ICML, ACL
+1. **Google Scholar**: broadest academic search, citation counts visible
+2. **arXiv**: preprints in CS, physics, math, quantitative biology, statistics
+3. **PubMed / PMC**: biomedical and life sciences, peer-reviewed
+4. **Semantic Scholar**: AI-powered academic search with citation context
+5. **SSRN**: social sciences, economics, law preprints
+6. **Institutional repositories**: university publication databases
+7. **Conference proceedings**: ACM DL, IEEE Xplore, NeurIPS, ICML, ACL
 
 ## Search Query Patterns
 
@@ -23,7 +23,7 @@ Priority order:
 "{topic} survey paper {field}"
 ```
 
-## Source Evaluation — Academic Specific
+## Source Evaluation: Academic Specific
 
 **Strongest signals:**
 - Peer-reviewed journal articles (check for journal impact factor if known)

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# extract.py — deterministic page extractor for the internal-linking skill,
+# extract.py: deterministic page extractor for the internal-linking skill,
 # defined in ../SKILL.md.
 #
 # Expects on PATH: python3 3.9+, with `lxml` and `scrapling` installed
-# (`pip install lxml cssselect "scrapling[fetchers]"` — `scrapling install`
+# (`pip install lxml cssselect "scrapling[fetchers]"`; `scrapling install`
 # once to fetch its bundled browser). `--html-file`/`--md-file` runs need
 # only lxml and cssselect.
 # Env vars read: none.
 # Example invocation:
 #   python3 extract.py https://example.com/blog/post --stealth
 #   python3 extract.py https://example.com/blog/post --html-file page.html
-"""internal-linking pre-parse extractor — site-agnostic.
+"""internal-linking pre-parse extractor: site-agnostic.
 
 Fetch a page (httpx fast tier; stealth+CF fallback) and emit structured JSON the
 matcher reasons over: headings, existing BODY links (anchor+href,
@@ -20,13 +20,13 @@ Boilerplate removal is STRUCTURAL, not site-specific:
   1. hard chrome tags (nav/footer/header/aside/form/script/...) + ARIA landmark
      roles (navigation/banner/contentinfo/complementary/search)
   2. class/id TOKEN match against a chrome vocabulary (token match, not
-     substring — 'vintage' must not match 'tag')
+     substring; 'vintage' must not match 'tag')
   3. main-content scoping: prefer <article>/<main>/[role=main]/[itemprop=
      articleBody] when one clearly holds the page's text
   4. link-density filter: any block whose text is >=65% link text with 2+ links
      is navigation/cards/tag-clouds, whatever its class says (readability-style)
 
-Linked text STAYS in body_text so sentences read whole — already-linked
+Linked text STAYS in body_text so sentences read whole; already-linked
 protection is enforced downstream by verify.py (exact reuse + overlap gates).
 
 Usage:
@@ -89,7 +89,7 @@ def _stopword_ratio(text):
 
 
 def _jsonld_articlebody(doc):
-    """Longest articleBody found in JSON-LD blocks — used as a verification
+    """Longest articleBody found in JSON-LD blocks: used as a verification
     oracle for the quality verdict, never as the extraction source (often
     truncated/absent, and it carries no link markup)."""
     best = ""
@@ -117,7 +117,7 @@ def extract(html_str, base_url, selector=None, relaxed=False):
     """relaxed=True is the deterministic FALLBACK pass: only explicit
     semantics are dropped (chrome tags, ARIA roles, rel=tag); all class-token,
     link-density and stopword heuristics are skipped. Different failure mode
-    from the strict pass — heuristics misfiring can't hurt it (trafilatura's
+    from the strict pass: heuristics misfiring can't hurt it (trafilatura's
     cascade insight: independent algorithms rarely all fail on one page)."""
     from lxml import html as LH
     doc = LH.fromstring(html_str)
@@ -144,9 +144,9 @@ def extract(html_str, base_url, selector=None, relaxed=False):
     # 1+2. drop hard chrome: tags, landmark roles, chrome class/id tokens.
     # Class-token drops carry a SIZE GUARD: CMSes wrap real content in
     # generically-named containers (HubSpot puts the whole post body inside
-    # `hs_cos_wrapper_meta_field` — token 'meta'); a class heuristic may never
+    # `hs_cos_wrapper_meta_field`, token 'meta'); a class heuristic may never
     # remove more than 35% of the page's text. Semantic tags (nav/footer/...)
-    # and ARIA landmark roles stay unguarded — they are explicit declarations.
+    # and ARIA landmark roles stay unguarded: they are explicit declarations.
     # <header> is exempt INSIDE article/main: there it is the post's own
     # title block, not site chrome.
     def _in_article(el):
@@ -167,7 +167,7 @@ def extract(html_str, base_url, selector=None, relaxed=False):
     def _safe_to_token_drop(el):
         # The element must not hold the page's prose. Chrome (navs, footers,
         # tag clouds, bylines) has almost no <p>/<li> prose; article wrappers
-        # hold most of it — even when a CMS gives them chrome-looking class
+        # hold most of it, even when a CMS gives them chrome-looking class
         # names (HubSpot `..._meta_field` wraps the whole post body).
         if page_prose:
             return _prose_len(el) <= 0.3 * page_prose
@@ -209,7 +209,7 @@ def extract(html_str, base_url, selector=None, relaxed=False):
     # 4. link-density + stopword-density boilerplate (skipped in relaxed
     # mode). Link-dense blocks are navigation/cards/tag-clouds whatever their
     # class names; low-stopword blocks (cookie banners, legal blurbs, spec
-    # soups) are not prose — both guarded so they never eat the article.
+    # soups) are not prose; both guarded so they never eat the article.
     dense = []
     lowsw = []
     root_len = len(_text(root)) or 1
@@ -260,7 +260,7 @@ def extract(html_str, base_url, selector=None, relaxed=False):
     # body text with LINKED-SPAN positions: walk text nodes, remembering which
     # pieces live inside an <a>. verify.py uses the spans to allow an anchor
     # whose string is linked in one place but free elsewhere (positional
-    # already-linked check — flat string comparison can't express that).
+    # already-linked check (flat string comparison can't express that).
     pieces = []  # (text, is_link)
 
     def _walk(el, in_link):
@@ -315,7 +315,7 @@ _MD_HEADING = re.compile(r"^#{1,6}\s+(.*)$")
 def extract_markdown(md_str, base_url):
     """Deterministic extract for a MARKDOWN source document (e.g. a draft
     article uploaded in chat, pre-publication). Same output contract as the
-    HTML path — body_text, headings, existing_links, linked_spans — so
+    HTML path (body_text, headings, existing_links, linked_spans), so
     verify.py and the matching subagent work unchanged. Strips embedded images
     (including multi-MB base64 data URIs) and code fences."""
     base_host = norm_host(base_url) if base_url.startswith("http") else ""
@@ -405,7 +405,7 @@ def main():
     ap.add_argument("url")
     ap.add_argument("--stealth", action="store_true")
     ap.add_argument("--html-file")
-    ap.add_argument("--selector", help="CSS selector (or XPath) of the content container — agent-escalation scope when structural detection misreads a page")
+    ap.add_argument("--selector", help="CSS selector (or XPath) of the content container; agent-escalation scope when structural detection misreads a page")
     ap.add_argument("--save-html", help="also save the fetched raw HTML here (for escalation inspection)")
     ap.add_argument("--md-file", help="treat input as a MARKDOWN document (draft article) instead of fetching/parsing HTML; url arg = its future/canonical URL or a placeholder slug")
     a = ap.parse_args()

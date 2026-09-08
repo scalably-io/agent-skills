@@ -1,14 +1,14 @@
-# Business Domain — Search Strategy
+# Business Domain: Search Strategy
 
 ## Where to Search
 
 Priority order:
-1. **Financial news** — Reuters, Bloomberg, Financial Times, Wall Street Journal
-2. **Industry reports** — Gartner, McKinsey, Forrester, Statista, IBISWorld
-3. **Regulatory filings** — SEC EDGAR (10-K, 10-Q, 8-K), company investor relations pages
-4. **Press releases** — official company newsrooms, PR Newswire, Business Wire
-5. **Market research** — CB Insights, Crunchbase, PitchBook (for startup/VC data)
-6. **Government data** — Bureau of Labor Statistics, Census, OECD, World Bank
+1. **Financial news**: Reuters, Bloomberg, Financial Times, Wall Street Journal
+2. **Industry reports**: Gartner, McKinsey, Forrester, Statista, IBISWorld
+3. **Regulatory filings**: SEC EDGAR (10-K, 10-Q, 8-K), company investor relations pages
+4. **Press releases**: official company newsrooms, PR Newswire, Business Wire
+5. **Market research**: CB Insights, Crunchbase, PitchBook (for startup/VC data)
+6. **Government data**: Bureau of Labor Statistics, Census, OECD, World Bank
 
 ## Search Query Patterns
 
@@ -22,7 +22,7 @@ Priority order:
 "{industry} competitive landscape analysis"
 ```
 
-## Source Evaluation — Business Specific
+## Source Evaluation: Business Specific
 
 **Strongest signals:**
 - SEC filings and audited financial statements

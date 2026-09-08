@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Expects: Node.js 18+ on PATH. Reads ANTHROPIC_API_KEY (optional — direct API mode) and
+// Expects: Node.js 18+ on PATH. Reads ANTHROPIC_API_KEY (optional, direct API mode) and
 // ANTHROPIC_BASE_URL (optional, defaults to https://api.anthropic.com). Without ANTHROPIC_API_KEY,
 // falls back to the `claude` CLI on PATH (Claude Code, `claude -p --model haiku`).
 // Example invocation: node classifier.mjs scraped.json niches.json classified.json --parallel 3
@@ -24,7 +24,7 @@ const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 3000;
 const DEFAULT_PARALLEL = 3;
 
-const SYSTEM_PROMPT = 'You are a website niche classifier. Given website data, classify each domain into a primary and secondary niche from the allowed list. Return ONLY a JSON object with a "classifications" array. Every domain must be classified — pick the closest match.';
+const SYSTEM_PROMPT = 'You are a website niche classifier. Given website data, classify each domain into a primary and secondary niche from the allowed list. Return ONLY a JSON object with a "classifications" array. Every domain must be classified; pick the closest match.';
 
 const JSON_SCHEMA = JSON.stringify({
   type: 'object',
@@ -79,7 +79,7 @@ Each entry: {"domain": "x.com", "primary": "Technology", "secondary": "SaaS"}
 ${entries}`;
 }
 
-// ── Direct API call (cheapest — when ANTHROPIC_API_KEY available) ───
+// ── Direct API call (cheapest, when ANTHROPIC_API_KEY available) ───
 async function callDirectAPI(prompt) {
   const resp = await fetch(`${BASE_URL}/v1/messages`, {
     method: 'POST',
@@ -108,9 +108,9 @@ async function callDirectAPI(prompt) {
   return data.content[0].text;
 }
 
-// ── CLI call — minimal system prompt, no tool bloat ─────────────────
+// ── CLI call: minimal system prompt, no tool bloat ─────────────────
 // Uses `env -u CLAUDECODE` to bypass nested session detection (same as deep-research skill).
-// Does NOT use --output-format json — if timeout kills the process, JSON output is lost.
+// Does NOT use --output-format json; if timeout kills the process, JSON output is lost.
 function callCLI(prompt) {
   return new Promise((resolve, reject) => {
     const chunks = [];

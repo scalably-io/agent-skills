@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# loop_controller.py — deterministic re-match loop driver for the
+# loop_controller.py: deterministic re-match loop driver for the
 # internal-linking skill, defined in ../SKILL.md. Optional deep-mode step;
 # most runs never call this (see SKILL.md Procedure step 8).
 #
@@ -93,21 +93,21 @@ def main():
             settled.append(slug)
             continue
 
-        # anchors already used for this source (don't repropose) — good + everything tried
+        # anchors already used for this source (don't repropose): good + everything tried
         exclude = sorted({x.get("anchor") for x in good if x.get("anchor")}
                          | {p.get("anchor") for p in (load(pf, []) or []) if isinstance(p, dict) and p.get("anchor")})
         fail_reasons = [f"'{r.get('anchor')}'→{(r.get('target') or '').split('/')[-1]}: {r.get('reason','')}"
                         for r in qa_fail]
-        # Pre-build the EXACT Task prompt the orchestrator copies verbatim — model does zero composition.
+        # Pre-build the EXACT Task prompt the orchestrator copies verbatim; model does zero composition.
         tp = (
             f"Re-match internal links for source `{slug}` (round {rnd+1}/{a.max_rounds}). "
             f"This source currently has {good_n} good link(s); find {need} MORE.\n"
             f"Read its extract at extract/{slug}.json and profiles.json. Do the mandatory per-target TALLY, "
             f"but FOCUS on these still-open targets (the source has no good link to them yet): {', '.join(open_targets)}.\n"
             f"Do NOT repropose these already-used anchors: {', '.join(exclude) if exclude else '(none)'}.\n"
-            + (f"Last round these failed QA — learn from the reasons, pick BETTER anchors: {' | '.join(fail_reasons)}.\n" if fail_reasons else "")
+            + (f"Last round these failed QA: learn from the reasons, pick BETTER anchors: {' | '.join(fail_reasons)}.\n" if fail_reasons else "")
             + f"APPEND your new proposals to the existing array in proposals/{slug}.json (keep prior entries). "
-              f"Only verbatim anchors whose sentence is genuinely about the target — quality over hitting the number."
+              f"Only verbatim anchors whose sentence is genuinely about the target; quality over hitting the number."
         )
         rematch.append({
             "source": slug, "slug": slug,
@@ -128,7 +128,7 @@ def main():
 
     n_re = len(rematch)
     summary = (f"Loop: {len(settled)} sources settled, {n_re} need re-match"
-               + (f" (rounds left vary, max {a.max_rounds})" if n_re else " — LOOP DONE, proceed to merge"))
+               + (f" (rounds left vary, max {a.max_rounds})" if n_re else ". LOOP DONE, proceed to merge"))
     print(json.dumps({"rematch": rematch, "settled": settled, "round_summary": summary}, indent=1))
 
 if __name__ == "__main__":

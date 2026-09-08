@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# verify.py — deterministic validity gate for the internal-linking skill,
+# verify.py: deterministic validity gate for the internal-linking skill,
 # defined in ../SKILL.md.
 #
 # Expects on PATH: python3 3.9+, stdlib only.
@@ -12,13 +12,13 @@
 
 For ONE source, check each proposed (anchor, target) against:
  - target in the provided target list
- - anchor appears VERBATIM in the source body text (outside links/headings — body_text already is)
+ - anchor appears VERBATIM in the source body text (outside links/headings; body_text already is)
  - anchor not already used as a link on the source
  - source does not already link to that target
  - global uniqueness: an anchor string maps to exactly ONE target across the whole campaign (ledger)
  - a source links a given target at most once; <= 3 links per source
 
-Stdlib only — runs with any python3.
+Stdlib only; runs with any python3.
 
 Usage:
   python3 verify.py --extract SRC.json --proposals PROP.json --targets TARG.json [--ledger LEDGER.json]
@@ -95,7 +95,7 @@ def main():
     ap.add_argument("--max-per-target", type=int, default=8,
                     help="max links any single TARGET may receive campaign-wide (distribution balance; 0=unlimited)")
     ap.add_argument("--counts",
-                    help="campaign-wide tally file {anchors:{a:n}, targets:{t:n}} — read+rewritten across sources to enforce the two caps above")
+                    help="campaign-wide tally file {anchors:{a:n}, targets:{t:n}}; read+rewritten across sources to enforce the two caps above")
     a = ap.parse_args()
 
     ex = json.load(open(a.extract))
@@ -138,13 +138,13 @@ def main():
     target_norm2raw = {norm_url(t): t for t in targets}
 
     source_url = ex.get("url", "")
-    # every existing BODY link's anchor text (internal AND external) — a new
+    # every existing BODY link's anchor text (internal AND external); a new
     # anchor may not overlap one, or the human implementer would have to nest
     # or split <a> tags
     existing_anchor_texts = {norm(l.get("anchor")) for l in ex.get("existing_links", [])
                              if l.get("anchor") and len(norm(l["anchor"])) > 3}
     # positional linked spans (newer extracts): exact [start,end) of linked
-    # text inside body_text — enables occurrence-level already-linked checks
+    # text inside body_text; enables occurrence-level already-linked checks
     linked_spans = ex.get("linked_spans")
 
     def _free_occurrence(a_lc):
@@ -183,7 +183,7 @@ def main():
         anchor_idx = None
         if isinstance(linked_spans, list):
             # positional check: the anchor must occur somewhere OUTSIDE all
-            # existing links — a string linked in one sentence may still be
+            # existing links; a string linked in one sentence may still be
             # placed at its free occurrence in another.
             i = _free_occurrence(a_lc)
             if i < 0:
@@ -207,11 +207,11 @@ def main():
             rej("source already has 3 accepted links"); continue
         # campaign-wide anchor-portfolio cap: don't over-use one anchor TEXT
         if a.max_anchor_reuse and anchor_ct.get(a_lc, 0) >= a.max_anchor_reuse:
-            rej("anchor used %d× campaign-wide (cap %d) — diversify the anchor"
+            rej("anchor used %d× campaign-wide (cap %d); diversify the anchor"
                 % (anchor_ct.get(a_lc, 0), a.max_anchor_reuse)); continue
         # campaign-wide distribution cap: don't let one target hog the links
         if a.max_per_target and target_ct.get(t_norm, 0) >= a.max_per_target:
-            rej("target already has %d links campaign-wide (cap %d) — spread to other targets"
+            rej("target already has %d links campaign-wide (cap %d); spread to other targets"
                 % (target_ct.get(t_norm, 0), a.max_per_target)); continue
 
         idx = anchor_idx if anchor_idx is not None else body_lc.find(a_lc)

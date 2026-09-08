@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# check-memory.sh — mechanical validation of the memory-system contract
+# check-memory.sh: mechanical validation of the memory-system contract
 # (file layout, format, caps) defined in ../SKILL.md.
 #
 # Expects on PATH: bash 4+, and standard POSIX text tools (grep, sed, find, wc).
 # Env vars read:
 #   MEMORY_ROOT       - project root containing memory/ and rules/ (default: current directory)
-#   MEMORY_CHECK_SCOPE - "full" (default) or "memory" — see the SCOPE comment below.
+#   MEMORY_CHECK_SCOPE - "full" (default) or "memory" (see the SCOPE comment below).
 # Example invocation:
 #   MEMORY_ROOT=. MEMORY_CHECK_SCOPE=full bash scripts/check-memory.sh
 #
@@ -19,9 +19,9 @@ LC="$ROOT/rules/learned-corrections.md"
 V=0
 
 # Scope: which surfaces this run validates.
-#   full   (default) — memory/ + rules/ + the workspace surfaces (projects/INDEX.md,
+#   full   (default): memory/ + rules/ + the workspace surfaces (projects/INDEX.md,
 #                      root clutter). What the Sunday routine and a full fleet use.
-#   memory           — memory/ + rules/ ONLY. For projects where projects/ is owned by
+#   memory           : memory/ + rules/ ONLY. For projects where projects/ is owned by
 #                      a pipeline, not by the memory routines (e.g. a site-generator
 #                      pipeline that owns its own article folders, so INDEX.md coverage
 #                      is never the dream routine's job). Without this the nightly run
@@ -50,13 +50,13 @@ cap_lines "$MEM/weekly-summary.md" 80 "weekly-summary.md"
 
 # ── The injected files must EXIST ───────────────────────────────────────────
 # Every check above is guarded by `[ -f ]`, so a project with no memory/ at all
-# used to print OK and exit 0 — "this dream has no input" read as green (found
+# used to print OK and exit 0 ("this dream has no input" read as green, found
 # in production: a project with no memory/ directory had silently been a
 # nightly no-op for months before this check existed). Absence is a
 # violation, not a pass. learned-corrections.md is deliberately NOT required:
 # a project with no rules yet legitimately has no file.
 for f in profile.md index.md weekly-summary.md; do
-  [ -f "$MEM/$f" ] || viol "$f is missing — the dream has nothing to consolidate into"
+  [ -f "$MEM/$f" ] || viol "$f is missing (the dream has nothing to consolidate into)"
 done
 
 # The daily logs are the nightly routine's INPUT. Projects fed by a daily-log
@@ -64,9 +64,9 @@ done
 # a content pipeline instead) runs SCOPE=memory and is not asked this question.
 if [ "$SCOPE" = full ]; then
   if [ ! -d "$MEM/daily" ]; then
-    viol "memory/daily/ is missing — the nightly routine has no input"
+    viol "memory/daily/ is missing (the nightly routine has no input)"
   elif [ -z "$(ls -A "$MEM/daily" 2>/dev/null)" ]; then
-    viol "memory/daily/ is empty — no daily-log task is feeding this project"
+    viol "memory/daily/ is empty (no daily-log task is feeding this project)"
   fi
 fi
 
@@ -74,7 +74,7 @@ fi
 if [ -f "$MEM/weekly-summary.md" ]; then
   wk=$(grep -c '^# Week of ' "$MEM/weekly-summary.md")
   [ "$wk" -eq 0 ] && viol "weekly-summary.md has no '# Week of YYYY-MM-DD' header"
-  [ "$wk" -gt 1 ] && viol "weekly-summary.md has $wk week headers (must be 1 — archive finished weeks)"
+  [ "$wk" -gt 1 ] && viol "weekly-summary.md has $wk week headers (must be 1, archive finished weeks)"
   oi=$(grep -ci '^#\+ *open items' "$MEM/weekly-summary.md")
   [ "$oi" -gt 1 ] && viol "weekly-summary.md has $oi 'Open items' sections (must be ≤1, replaced not stacked)"
 fi
@@ -95,7 +95,7 @@ for d in $TREE_DIRS; do
     s=$(sed -n '2,8p' "$f" | grep '^summary:' | head -1 | cut -c9-)
     [ -n "$s" ] && [ "${#s}" -gt 160 ] && viol "$rel summary is ${#s} chars (cap 160)"
     n=$(grep -cve '^[[:space:]]*$' "$f")
-    [ "$n" -gt 150 ] && viol "$rel has $n lines (cap 150 — split it)"
+    [ "$n" -gt 150 ] && viol "$rel has $n lines (cap 150, split it)"
     if [ -f "$MEM/index.md" ]; then
       grep -qF "$rel" "$MEM/index.md" || viol "$rel not listed in index.md"
     fi
@@ -117,11 +117,11 @@ if [ -f "$LC" ]; then
   grep -q '^## Pending' "$LC" || viol "learned-corrections.md missing '## Pending' section"
   grep -q '^## Rules' "$LC" || viol "learned-corrections.md missing '## Rules' section"
   nrules=$(sed -n '/^## Rules/,/^## /p' "$LC" | grep -c '^- ')
-  [ "$nrules" -gt 60 ] && viol "learned-corrections.md has $nrules rules (cap 60 — consolidate)"
+  [ "$nrules" -gt 60 ] && viol "learned-corrections.md has $nrules rules (cap 60, consolidate)"
   # scaffolding blocks belong in the corrections log, not here
   for marker in '\*\*Source' '\*\*Promoted' '\*\*Occurrences'; do
     c=$(grep -cE "^$marker" "$LC")
-    [ "$c" -gt 0 ] && viol "learned-corrections.md has $c '$(echo "$marker" | tr -d '\\')' blocks — provenance belongs in reference/corrections-log.md"
+    [ "$c" -gt 0 ] && viol "learned-corrections.md has $c '$(echo "$marker" | tr -d '\\')' blocks. Provenance belongs in reference/corrections-log.md"
   done
   # verbatim duplicate rule lines
   dups=$(grep '^- ' "$LC" | sed 's/<!--.*-->//' | sed 's/[[:space:]]*$//' | sort | uniq -d | head -3)
@@ -132,7 +132,7 @@ if [ -f "$LC" ]; then
   # New rules carry explicit evidence metadata. Legacy rules are warned for
   # manual provenance audit; they are never auto-upgraded by the dream.
   legacy=$(sed -n '/^## Rules/,/^## /p' "$LC" | grep '^- ' | grep '<!-- *lc:' | grep -cv 'evidence:' || true)
-  [ "${legacy:-0}" -gt 0 ] && warn "learned-corrections.md: $legacy legacy rule(s) lack evidence metadata — audit; do not auto-upgrade"
+  [ "${legacy:-0}" -gt 0 ] && warn "learned-corrections.md: $legacy legacy rule(s) lack evidence metadata. Audit; do not auto-upgrade"
   bad_evidence=$(sed -n '/^## Rules/,/^## /p' "$LC" | grep '^- ' | grep 'evidence:' | grep -cv 'evidence:user-explicit' || true)
   [ "${bad_evidence:-0}" -gt 0 ] && viol "learned-corrections.md: $bad_evidence rule(s) use non-explicit evidence metadata"
   # approval-by-silence phrases; add your team's own languages here
@@ -141,7 +141,7 @@ if [ -f "$LC" ]; then
   fi
   # size sanity
   b=$(wc -c < "$LC")
-  [ "$b" -gt 12000 ] && viol "learned-corrections.md is ${b} bytes (target ≤ 12000 — compress or consolidate)"
+  [ "$b" -gt 12000 ] && viol "learned-corrections.md is ${b} bytes (target <= 12000, compress or consolidate)"
 fi
 
 # ── Evidence hygiene on injected/current surfaces ──────────────────────────
@@ -151,7 +151,7 @@ fi
 for f in "$MEM/profile.md" "$MEM/weekly-summary.md" "$LC"; do
   [ -f "$f" ] || continue
   if grep -Eqi '(whatsapp|phone|telefon|tel\.?)[^[:cntrl:]]*[1-9][0-9]{8,14}|[1-9][0-9]{8,14}@s\.whatsapp\.net' "$f"; then
-    warn "${f#"$ROOT/"} contains a raw phone-like identifier — remove after provenance review"
+    warn "${f#"$ROOT/"} contains a raw phone-like identifier. Remove after provenance review"
   fi
   # approval-by-silence phrases; add your team's own languages here
   if grep -Eqi 'continued (using|the workflow).*without complaint|accepted without objection|approved.*bez (zamerke|prigovora)|bez (zamerke|prigovora).*approved|approved.*no objections?|no objections?.*approved' "$f"; then
@@ -177,12 +177,12 @@ if [ -f "$LC" ] && [ ! -f "$MEM/reference/corrections-log.md" ]; then
   [ "${nrules:-0}" -gt 0 ] && viol "reference/corrections-log.md missing while learned-corrections has rules"
 fi
 
-# ── Projects index (workspace surface — full scope only) ────────────────────
+# ── Projects index (workspace surface, full scope only) ─────────────────────
 PJ="$ROOT/projects"
 if [ "$SCOPE" = full ] && [ -d "$PJ" ]; then
   ndirs=$(find "$PJ" -maxdepth 1 -mindepth 1 -type d ! -name archive | wc -l)
   if [ "$ndirs" -ge 3 ] && [ ! -f "$PJ/INDEX.md" ]; then
-    viol "projects/ has $ndirs project dirs but no INDEX.md — create the index"
+    viol "projects/ has $ndirs project dirs but no INDEX.md (create the index)"
   fi
   if [ -f "$PJ/INDEX.md" ]; then
     for d in "$PJ"/*/; do
@@ -196,7 +196,7 @@ fi
 # ── Workspace root clutter ──────────────────────────────────────────────────
 # Exclusions = the live-state surface: pipeline state files and their
 # .bak twins, sync logs/watermarks, lockfiles, dotfiles. Verified against a
-# live cron-driven pipeline — these are written daily and must stay at root;
+# live cron-driven pipeline: these are written daily and must stay at root;
 # counting them made the tidy threshold unreachable.
 if [ "$SCOPE" = full ]; then
 loose=$(find "$ROOT" -maxdepth 1 -type f \
@@ -205,7 +205,7 @@ loose=$(find "$ROOT" -maxdepth 1 -type f \
   ! -name '*sync-log*' ! -name '*sync-watermark*' \
   ! -name '*.lock' ! -name '.*' \
   2>/dev/null | wc -l)
-[ "$loose" -gt 12 ] && viol "workspace root has $loose loose files (threshold 12 — run the workspace tidy)"
+[ "$loose" -gt 12 ] && viol "workspace root has $loose loose files (threshold 12, run the workspace tidy)"
 fi
 
 [ "$V" -eq 0 ] && echo "OK" && exit 0

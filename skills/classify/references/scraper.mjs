@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Expects: Node.js 18+ on PATH (uses global fetch and node:dns/promises). No env vars read.
-// No external services — plain HTTP fetch with a DNS pre-check, adaptive concurrency, and
+// No external services: plain HTTP fetch with a DNS pre-check, adaptive concurrency, and
 // crash recovery (resumes from an existing output file).
 // Example invocation: node scraper.mjs domains.json scraped.json
 //   domains.json is a JSON array of bare domains: ["example.com","example.org"]
@@ -124,7 +124,7 @@ async function fetchPage(url) {
 
 // ── Per-domain scrape ───────────────────────────────────────────────
 async function scrapeDomain(domain) {
-  // DNS pre-check — skip dead domains fast
+  // DNS pre-check: skip dead domains fast
   if (!await dnsResolves(domain)) {
     return { domain, title: '', meta: '', headings: '', body: '', aboutBody: '', status: 'error', errorType: 'dns' };
   }

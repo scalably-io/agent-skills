@@ -1,6 +1,6 @@
 ---
 name: anchor-policy
-description: "Validate anchor text placement, URL correctness, and SEO positioning in a guest-post draft against a target anchor spec — checks that anchors land in the correct sections, the primary anchor is the first external link, the introduction is link-free, and spacing rules are met, for both the Standard/PR and Listicle anchor models. Triggers: check anchors, validate links, anchor policy, anchor compliance, verify anchor text, anchor QA, link placement check."
+description: "Validate anchor text placement, URL correctness, and SEO positioning in a guest-post draft against a target anchor spec: checks that anchors land in the correct sections, the primary anchor is the first external link, the introduction is link-free, and spacing rules are met, for both the Standard/PR and Listicle anchor models. Triggers: check anchors, validate links, anchor policy, anchor compliance, verify anchor text, anchor QA, link placement check."
 license: MIT
 metadata:
   source: https://scalably.io/skills/anchor-policy
@@ -10,7 +10,7 @@ metadata:
     date: "2026-09-07"
   triggers: [check anchors, validate links, anchor policy, anchor compliance, verify anchor text, anchor QA, link placement check]
   not_for:
-    - "Writing or editing article content — use guest-post-writer for that"
+    - "Writing or editing article content: use guest-post-writer for that"
     - "Checking whether external URLs are live or reachable"
 ---
 
@@ -18,7 +18,7 @@ metadata:
 
 ## What it does
 
-Validates anchor placement, URL correctness, and SEO positioning in a guest-post draft against the canonical anchor rules, for both anchor models a guest post can use: **Standard/PR** (rules S1-S9) and **Listicle** (rules L1-L9). The two models are mutually exclusive — the skill reads the article type first and applies only the matching rule set. Returns a pass/fail verdict with the exact rule(s) violated and actionable remediation.
+Validates anchor placement, URL correctness, and SEO positioning in a guest-post draft against the canonical anchor rules, for both anchor models a guest post can use: **Standard/PR** (rules S1-S9) and **Listicle** (rules L1-L9). The two models are mutually exclusive; the skill reads the article type first and applies only the matching rule set. Returns a pass/fail verdict with the exact rule(s) violated and actionable remediation.
 
 ## Requirements
 
@@ -53,7 +53,7 @@ Expected verdict:
 {
   "pass": false,
   "failed_rules": ["S4"],
-  "notes": ["Anchor text is \"cloud backup\" but the spec requires the exact text \"cloud backup service\" (case-sensitive) — S4 fails. Fix: change the link text to match the spec exactly."]
+  "notes": ["Anchor text is \"cloud backup\" but the spec requires the exact text \"cloud backup service\" (case-sensitive). S4 fails. Fix: change the link text to match the spec exactly."]
 }
 ```
 
@@ -61,7 +61,7 @@ Expected verdict:
 
 ### 1. Read the canonical rules
 
-Read `references/canonical-rules.md` in this skill folder. Determine the article type from the spec — Standard/PR or Listicle — before checking anything else; the two rule sets contradict each other on purpose and must never be mixed.
+Read `references/canonical-rules.md` in this skill folder. Determine the article type from the spec (Standard/PR or Listicle) before checking anything else; the two rule sets contradict each other on purpose and must never be mixed.
 
 ### 2. Validate
 
@@ -83,8 +83,8 @@ When failing, set `pass=false`, list every violated rule ID in `failed_rules` (e
 
 <verification>
 Before returning a verdict:
-1. Every rule in the matching set (S1-S9 or L1-L9) was checked explicitly — no silent omissions.
+1. Every rule in the matching set (S1-S9 or L1-L9) was checked explicitly; no silent omissions.
 2. Each failed rule has a specific reason tied to the draft text, not a generic statement.
 3. Remediation guidance says exactly what to change, not just what is wrong.
-4. Never mark a rule compliant when the evidence needed to check it (draft text, anchor spec) is missing — fail safe (`pass=false`) instead, and say what evidence is missing.
+4. Never mark a rule compliant when the evidence needed to check it (draft text, anchor spec) is missing; fail safe (`pass=false`) instead, and say what evidence is missing.
 </verification>

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# archive-week.sh — rotate the finished week out of weekly-summary.md, part
+# archive-week.sh: rotate the finished week out of weekly-summary.md, part
 # of the memory-system contract defined in ../SKILL.md.
 #
-# Expects on PATH: bash 4+, coreutils date (GNU or BSD — both invocation
+# Expects on PATH: bash 4+, coreutils date (GNU or BSD, both invocation
 # forms are tried below).
 # Env vars read:
 #   MEMORY_ROOT - project root containing memory/ (default: current directory)
@@ -18,7 +18,7 @@ ROOT="${MEMORY_ROOT:-.}"
 WS="$ROOT/memory/weekly-summary.md"
 ARCH="$ROOT/memory/weekly-archive"
 
-[ -f "$WS" ] || { echo "no weekly-summary.md — nothing to archive"; exit 0; }
+[ -f "$WS" ] || { echo "no weekly-summary.md, nothing to archive"; exit 0; }
 mkdir -p "$ARCH"
 
 # ISO year/week of the week being archived (the week containing yesterday,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# merge.py — deterministic final-merge for the internal-linking skill,
+# merge.py: deterministic final-merge for the internal-linking skill,
 # defined in ../SKILL.md.
 #
 # Expects on PATH: python3 3.9+, stdlib only.
@@ -10,7 +10,7 @@
 
 Joins validity-gate survivors with QA verdicts on the FULL (source, anchor,
 target) key and emits the final link list + a per-link audit trail. This step
-replaces any ad-hoc merging by the orchestrator — two real production bugs
+replaces any ad-hoc merging by the orchestrator; two real production bugs
 motivated it: a `[a-z]*` glob that silently dropped digit-prefixed source
 slugs, and verdict matching on (anchor, target) without source that let one
 batch's FAIL poison identical pairs from other sources.
@@ -19,15 +19,15 @@ Usage:
   python3 merge.py --verify-dir verify/ --qa-dir qa/ --out final-links.json
 
 Inputs:
-  verify/*.json — verify.py stdout saved per source: {"accepted":[...], "rejected":[...]}
+  verify/*.json: verify.py stdout saved per source: {"accepted":[...], "rejected":[...]}
                   (accepted rows carry source/anchor/anchor_exact/target/sentence)
-  qa/*.json     — any layout; every file containing {"results":[...]} is read.
+  qa/*.json     : any layout; every file containing {"results":[...]} is read.
                   Verdict rows MUST carry source+anchor+target (quality-gate contract).
 
 Rules:
   - a link is FINAL iff it is verify-accepted AND has a QA verdict 'pass'
   - verify-accepted with NO matching verdict -> counted 'unjudged' and EXCLUDED,
-    listed loudly (the orchestrator must re-run QA for them — never silently drop)
+    listed loudly (the orchestrator must re-run QA for them; never silently drop)
   - verdicts that match nothing are listed as 'orphan verdicts' (key mismatch bug)
 Exit code 1 if any unjudged links or orphan verdicts exist, so the pipeline
 notices instead of shipping a silently-shrunk campaign.
@@ -96,7 +96,7 @@ def main():
         if v is None:
             unjudged.append(row)
         elif str(v.get("verdict", "")).lower() == "pass":
-            # Normalize the "why this link" field — the matching subagent emits it under
+            # Normalize the "why this link" field; the matching subagent emits it under
             # different names across runs (target_topic / reason / rationale).
             # Coalesce into a single stable `why` so the sheet column always fills.
             row["why"] = (row.get("target_topic") or row.get("reason")
@@ -106,7 +106,7 @@ def main():
             qa_failed.append({**row, "qa_reason": v.get("reason", "")})
 
     # Anchor-portfolio flag: the same anchor TEXT reused many times
-    # over-optimizes the anchor profile. We FLAG, never drop — the human decides
+    # over-optimizes the anchor profile. We FLAG, never drop; the human decides
     # at insertion time. Count each anchor text across the final links and stamp
     # every link with how many times its anchor appears campaign-wide.
     anchor_freq = {}
@@ -144,7 +144,7 @@ def main():
     if unjudged or orphans:
         sys.stderr.write(
             f"MERGE INCOMPLETE: {len(unjudged)} unjudged links, "
-            f"{len(orphans)} orphan verdicts — see {a.out}.audit.json. "
+            f"{len(orphans)} orphan verdicts; see {a.out}.audit.json. "
             "Re-run QA for unjudged links; do NOT deliver without resolving.\n")
         sys.exit(1)
 

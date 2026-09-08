@@ -1,6 +1,6 @@
 ---
 name: webmaster-policy
-description: "Validate a guest-post draft against a target site's webmaster requirements — checks formatting, structure, prohibited topics, word count, section constraints, and image formatting with descriptive captions. Triggers: webmaster policy, check requirements, webmaster requirements, policy check, validate draft, content requirements, site requirements, webmaster QA."
+description: "Validate a guest-post draft against a target site's webmaster requirements: checks formatting, structure, prohibited topics, word count, section constraints, and image formatting with descriptive captions. Triggers: webmaster policy, check requirements, webmaster requirements, policy check, validate draft, content requirements, site requirements, webmaster QA."
 license: MIT
 metadata:
   source: https://scalably.io/skills/webmaster-policy
@@ -10,15 +10,15 @@ metadata:
     date: "2026-09-07"
   triggers: [webmaster policy, check requirements, webmaster requirements, policy check, validate draft, content requirements, site requirements, webmaster QA]
   not_for:
-    - "Anchor link validation — use anchor-policy for that"
-    - "Writing the article itself — use guest-post-writer for that"
+    - "Anchor link validation: use anchor-policy for that"
+    - "Writing the article itself: use guest-post-writer for that"
 ---
 
 # Webmaster Policy
 
 ## What it does
 
-Validates a guest-post draft against a target site's webmaster requirements: formatting and structural rules, prohibited topics or claims, word-count and section constraints, and image formatting (position and captions). Returns a pass/fail verdict with the exact requirement violated and actionable remediation. Defaults to fail-safe — an ambiguous requirement is treated as unmet, not waved through.
+Validates a guest-post draft against a target site's webmaster requirements: formatting and structural rules, prohibited topics or claims, word-count and section constraints, and image formatting (position and captions). Returns a pass/fail verdict with the exact requirement violated and actionable remediation. Defaults to fail-safe: an ambiguous requirement is treated as unmet, not waved through.
 
 ## Requirements
 
@@ -59,7 +59,7 @@ Expected verdict:
 {
   "pass": false,
   "failed_rules": ["5"],
-  "notes": ["The caption \"Stock photo\" is a generic label, not a specific description of what the image shows — rule 5 fails. Fix: replace it with a caption describing the actual dashboard screenshot (e.g. \"The backup dashboard showing a completed nightly sync\")."]
+  "notes": ["The caption \"Stock photo\" is a generic label, not a specific description of what the image shows. Rule 5 fails. Fix: replace it with a caption describing the actual dashboard screenshot (e.g. \"The backup dashboard showing a completed nightly sync\")."]
 }
 ```
 
@@ -67,7 +67,7 @@ Expected verdict:
 
 ### 1. Read the requirements
 
-Take the target site's webmaster requirements as given in the input — do not infer requirements that were not stated.
+Take the target site's webmaster requirements as given in the input; do not infer requirements that were not stated.
 
 ### 2. Validate
 
@@ -77,7 +77,7 @@ Check the draft against each of the following, using only what the target site's
 2. The draft avoids any prohibited topic or claim, if any were specified.
 3. The draft's word count and section structure match the stated constraints.
 4. Every image sits at the start of its section (right after the H2/H3), not at the end.
-5. Every image has a specific, descriptive caption — never a generic label like "AI generated" or "Stock photo".
+5. Every image has a specific, descriptive caption; never a generic label like "AI generated" or "Stock photo".
 
 Any violation fails QA. If a requirement is ambiguous or under-specified, default to fail-safe: mark it failed and say why, rather than assuming compliance.
 
@@ -97,8 +97,8 @@ When failing, set `pass=false`, list every violated requirement (by the numberin
 
 <verification>
 Before returning a verdict:
-1. Every requirement in step 2 was checked explicitly — no silent omissions.
+1. Every requirement in step 2 was checked explicitly; no silent omissions.
 2. Each failed item has a specific reason tied to the draft text, not a generic statement.
 3. Remediation guidance says exactly what to change, not just what is wrong.
-4. Never mark a requirement compliant when the evidence needed to check it is missing — fail safe (`pass=false`) instead, and say what evidence is missing.
+4. Never mark a requirement compliant when the evidence needed to check it is missing; fail safe (`pass=false`) instead, and say what evidence is missing.
 </verification>

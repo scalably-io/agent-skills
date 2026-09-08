@@ -2,7 +2,7 @@
 
 Use these tiers to evaluate every source encountered during research. The tier determines how a source can be used in the final report.
 
-## Tier 1 — Preferred
+## Tier 1: Preferred
 
 Use freely. These are the strongest sources.
 
@@ -17,7 +17,7 @@ Use freely. These are the strongest sources.
 | Standards bodies | IETF RFCs, W3C specs, IEEE standards, ISO |
 | Primary legal documents | SEC filings, court records, legislation text |
 
-## Tier 2 — Acceptable
+## Tier 2: Acceptable
 
 Use freely but note the source type in findings. Slightly less authoritative than Tier 1.
 
@@ -31,7 +31,7 @@ Use freely but note the source type in findings. Slightly less authoritative tha
 | Company press releases | Official newsroom announcements (note inherent bias) |
 | Professional associations | Industry body publications and reports |
 
-## Tier 3 — Caution
+## Tier 3: Caution
 
 Must cross-reference with a Tier 1 or Tier 2 source before including. Always mark as community-sourced in findings.
 
@@ -45,17 +45,17 @@ Must cross-reference with a Tier 1 or Tier 2 source before including. Always mar
 
 **Tier 3 rules:**
 - Never cite as sole source for a factual claim
-- Use to discover leads — then find the primary source
+- Use to discover leads, then find the primary source
 - If citing, always qualify: "Community reports suggest..." or "According to a discussion on..."
 - Note that these sources may be anecdotal or biased
 
-## Tier Never — Do Not Cite
+## Tier Never: Do Not Cite
 
 Never use as a source. Discard claims found only in these sources.
 
 | Category | Why |
 |----------|-----|
-| Wikipedia (as primary source) | Editable by anyone, not a primary source. Use it to find the cited references — then cite those directly. |
+| Wikipedia (as primary source) | Editable by anyone, not a primary source. Use it to find the cited references, then cite those directly. |
 | AI content farms | Generated content without verification, circular sourcing |
 | Content mills | Low-quality, often inaccurate, SEO-driven |
 | SEO spam sites | Exist to rank, not to inform |
@@ -66,10 +66,10 @@ Never use as a source. Discard claims found only in these sources.
 
 When evaluating a source:
 
-1. **Identify the publisher** — who runs this website/publication?
-2. **Check authorship** — is there a named author with credentials?
-3. **Look for methodology** — does data have a disclosed collection method?
-4. **Assess editorial standards** — is there an editorial process or is it self-published?
-5. **Consider incentives** — does the publisher benefit from a particular conclusion?
+1. **Identify the publisher**: who runs this website/publication?
+2. **Check authorship**: is there a named author with credentials?
+3. **Look for methodology**: does data have a disclosed collection method?
+4. **Assess editorial standards**: is there an editorial process or is it self-published?
+5. **Consider incentives**: does the publisher benefit from a particular conclusion?
 
 When in doubt, downgrade one tier. A company blog writing about their own product is Tier 3 (biased), not Tier 2.

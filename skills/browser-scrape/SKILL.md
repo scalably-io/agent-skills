@@ -1,6 +1,6 @@
 ---
 name: browser-scrape
-description: "Retrieve and extract public web-page content with Scrapling, escalating from a plain HTTP fetch to a real browser to an anti-bot stealth browser only as needed. Use for scraping, reading sites, homepage or contact harvesting, domain enrichment, repeated URLs, JS-rendered pages, and public pages that block a plain fetch. Not for login, forms, clicks, visual UI work, downloads, or authenticated interaction — use an interactive browser-automation skill for those; use a dedicated API when one exists."
+description: "Retrieve and extract public web-page content with Scrapling, escalating from a plain HTTP fetch to a real browser to an anti-bot stealth browser only as needed. Use for scraping, reading sites, homepage or contact harvesting, domain enrichment, repeated URLs, JS-rendered pages, and public pages that block a plain fetch. Not for login, forms, clicks, visual UI work, downloads, or authenticated interaction; use an interactive browser-automation skill for those; use a dedicated API when one exists."
 license: MIT
 metadata:
   source: https://scalably.io/skills/browser-scrape
@@ -21,8 +21,8 @@ Fetches and extracts content from public web pages using [Scrapling](https://git
 
 ## Requirements
 
-- Scrapling: `pip install "scrapling[fetchers]"`. The bare `pip install scrapling` installs only the HTML parser — the `[fetchers]` extra is required for `Fetcher`/`DynamicFetcher`/`StealthyFetcher` and the CLI's `fetch`/`stealthy-fetch` subcommands. Scrapling is open source (MIT-licensed): https://github.com/D4Vinci/Scrapling.
-- The browser-based tiers (`DynamicFetcher`, `StealthyFetcher`) additionally need their Playwright/Camoufox browser binaries installed — Scrapling's own install docs cover this per-platform; the plain `Fetcher` tier needs nothing beyond the pip install.
+- Scrapling: `pip install "scrapling[fetchers]"`. The bare `pip install scrapling` installs only the HTML parser; the `[fetchers]` extra is required for `Fetcher`/`DynamicFetcher`/`StealthyFetcher` and the CLI's `fetch`/`stealthy-fetch` subcommands. Scrapling is open source (MIT-licensed): https://github.com/D4Vinci/Scrapling.
+- The browser-based tiers (`DynamicFetcher`, `StealthyFetcher`) additionally need their Playwright/Camoufox browser binaries installed; Scrapling's own install docs cover this per-platform; the plain `Fetcher` tier needs nothing beyond the pip install.
 
 ## Inputs and outputs
 
@@ -58,13 +58,13 @@ Expected output: `200 Example Domain`.
 
 ### Choose the tier
 
-1. **`Fetcher` (plain HTTP)** — fastest, lowest overhead, no browser. Default choice for ordinary pages. CLI: `scrapling extract get`.
-2. **`DynamicFetcher` (real rendered browser)** — for JS-rendered pages where the plain fetch comes back empty or missing content you can see in a real browser. CLI: `scrapling extract fetch`.
-3. **`StealthyFetcher` (anti-bot stealth browser)** — for pages that block both of the above (Cloudflare challenges, bot walls). Slower and heavier; use only when the page genuinely needs it. CLI: `scrapling extract stealthy-fetch`.
+1. **`Fetcher` (plain HTTP)**: fastest, lowest overhead, no browser. Default choice for ordinary pages. CLI: `scrapling extract get`.
+2. **`DynamicFetcher` (real rendered browser)**: for JS-rendered pages where the plain fetch comes back empty or missing content you can see in a real browser. CLI: `scrapling extract fetch`.
+3. **`StealthyFetcher` (anti-bot stealth browser)**: for pages that block both of the above (Cloudflare challenges, bot walls). Slower and heavier; use only when the page genuinely needs it. CLI: `scrapling extract stealthy-fetch`.
 
-Escalate one tier at a time. Don't reach for the stealth tier by default — most public pages don't need it, and it costs meaningfully more time per URL.
+Escalate one tier at a time. Don't reach for the stealth tier by default: most public pages don't need it, and it costs meaningfully more time per URL.
 
-### Single URL — CLI
+### Single URL: CLI
 
 The output format is decided by the file extension you give it: `.md` converts to Markdown, `.txt` strips to plain text, `.html` keeps the raw HTML.
 
@@ -82,9 +82,9 @@ scrapling extract fetch 'https://example.com' out.md --css-selector 'article'
 scrapling extract stealthy-fetch 'https://example.com' out.md --css-selector 'article' --solve-cloudflare
 ```
 
-### Single URL or a batch — Python API
+### Single URL or a batch: Python API
 
-For anything beyond a one-off fetch — batches, conditional escalation, or using the extracted value inline — the Python API is more direct than shelling out to the CLI per URL:
+For anything beyond a one-off fetch (batches, conditional escalation, or using the extracted value inline), the Python API is more direct than shelling out to the CLI per URL:
 
 ```python
 from scrapling.fetchers import Fetcher, StealthyFetcher
@@ -107,7 +107,7 @@ if page.status != 200 or not page.css('article').get():
     page = StealthyFetcher.fetch(url, solve_cloudflare=True)
 ```
 
-If you'll re-scrape the same page shape after the site's markup changes, turn on adaptive mode — it relocates elements by similarity instead of breaking when a selector stops matching:
+If you'll re-scrape the same page shape after the site's markup changes, turn on adaptive mode: it relocates elements by similarity instead of breaking when a selector stops matching:
 
 ```python
 StealthyFetcher.adaptive = True
@@ -119,9 +119,9 @@ items = page.css('.product', adaptive=True)     # relocates by similarity instea
 
 ### Interpret the result
 
-- `page.status` (int) — the HTTP status code. Treat only a 200-class response as retrieved content; don't assume success just because the call didn't raise.
-- `page.css(selector)` / `page.xpath(selector)` / `page.find_all(...)` — selection methods; `.get()` returns the first match, `.getall()` returns all of them.
-- A CLI run that fails prints an error and exits non-zero — check the output file exists and is non-empty before treating it as retrieved content, don't assume a zero-byte or missing file is a fluke.
+- `page.status` (int): the HTTP status code. Treat only a 200-class response as retrieved content; don't assume success just because the call didn't raise.
+- `page.css(selector)` / `page.xpath(selector)` / `page.find_all(...)`: selection methods; `.get()` returns the first match, `.getall()` returns all of them.
+- A CLI run that fails prints an error and exits non-zero: check the output file exists and is non-empty before treating it as retrieved content, don't assume a zero-byte or missing file is a fluke.
 - Escalate once (`Fetcher` → `DynamicFetcher`/`StealthyFetcher`), not repeatedly. If the tier that should handle the page still comes back empty or blocked after that one escalation, stop and treat it as a real failure rather than retrying the same call.
 
 ### Proxy and rate limits
@@ -135,8 +135,8 @@ page = StealthyFetcher.fetch(url, proxy='http://username:password@host:port')
 scrapling extract get 'https://example.com' out.md --proxy 'http://username:password@host:port'
 ```
 
-Keep concurrency modest for batch jobs and respect the target site's terms and robots rules — Scrapling makes evasion easy, which is exactly why it's worth self-limiting deliberately.
+Keep concurrency modest for batch jobs and respect the target site's terms and robots rules; Scrapling makes evasion easy, which is exactly why it's worth self-limiting deliberately.
 
 ### Recovery
 
-Escalate once, plain → stealth. If the tier that should work for a given page still fails for the same reason on the second attempt, stop — report the URL, the status code or exception, and which tier(s) you tried, rather than retrying the same call in a loop. If the task is actually interactive (you need to log in, fill a form, click through a flow), this skill is the wrong tool — use a full browser-automation skill instead; Scrapling is for content retrieval, not interaction.
+Escalate once, plain → stealth. If the tier that should work for a given page still fails for the same reason on the second attempt, stop: report the URL, the status code or exception, and which tier(s) you tried, rather than retrying the same call in a loop. If the task is actually interactive (you need to log in, fill a form, click through a flow), this skill is the wrong tool; use a full browser-automation skill instead; Scrapling is for content retrieval, not interaction.
