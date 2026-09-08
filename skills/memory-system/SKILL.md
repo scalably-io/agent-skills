@@ -194,7 +194,7 @@ the nightly routine merges them into ## Rules)
 **History:** 2026-04-06 refined (no generic fallback) · 2026-04-10 promoted
 **Evidence:** user-explicit · scope: standing
 **Source quote:** "dont force info@ if theres a real contact" (source, 2026-04-06)
-**Wrong:** info@site.com when editor@ exists · **Right:** editor@site.com
+**Wrong:** info@example.com when editor@ exists · **Right:** editor@example.com
 
 ## Retired
 - lc:article-age-2024 — superseded by lc:article-age (2023+, not 2024+), 2026-05-12
