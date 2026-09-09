@@ -26,6 +26,12 @@
         "./skills/link-insertion-finder", "./skills/batch-contact-email", "./skills/lead-pipeline",
         "./skills/internal-linking", "./skills/guest-post-writer"
       ]
+    },
+    {
+      "name": "agent-hooks",
+      "description": "Guardrails for coding agents: destructive-command triage, one-level delegation, foreground subagents, stuck-loop detection, allowlisted commit verification, session state, and a read-only tidiness scan.",
+      "version": "1.0.0",
+      "source": "https://github.com/scalably-io/agent-hooks"
     }
   ]
 }
